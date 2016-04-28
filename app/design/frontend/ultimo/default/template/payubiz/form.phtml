@@ -1,0 +1,28 @@
+<?php
+/**
+ * form.phtml
+ *
+ * Copyright (c) 2011-2015 PayU India
+ * @author     Ayush Mittal
+ * @copyright  2011-2015 PayU India
+ * @license    http://www.opensource.org/licenses/lgpl-license.php LGPL
+ * @link       http://www.payu.in
+ * @category   PayUbiz
+ * @package    PayUbiz
+ */
+?>
+<fieldset class="form-list">
+    <?php $_code=$this->getMethodCode() ?>
+    <ul id="payment_form_<?php echo $_code ?>" style="display:none">
+    	<li class="card_info">
+    		<img src="<?php echo $this->getSkinUrl('images/visa.png') ?>" alt="visa" title="visa" width="40" height="34" />
+    		<img src="<?php echo $this->getSkinUrl('images/master-card.png') ?>" alt="master card" title="master card" width="40" height="34" />
+    		<img src="<?php echo $this->getSkinUrl('images/amex.png') ?>" alt="amex" title="amex" width="40" height="34" />
+    		<img src="<?php echo $this->getSkinUrl('images/netbanking.jpg') ?>" alt="amex" title="amex" width="121" height="34" />
+    		 & All other cards
+    	</li>
+        <li>
+            <?php echo $this->__('You will be redirected to the PayUbiz website when you place an order.') ?>
+        </li>
+    </ul>
+</fieldset>

@@ -1,0 +1,8 @@
+<select multiple="multiple" size="10" class="required-entry required-entry select multiselect" name="stitching_service[]" id="stitching_service">
+	<?php $collection = Mage::getModel('stitchingservices/stitchingservices')->getCollection()->addFieldToFilter('stitching_service_id',$_POST['service'])->addFieldToFilter('status',1)->addFieldToFilter('stitching_service_price', array('gt' => '0.00'));
+	if (sizeof($collection) > 0) {
+		foreach ($collection as $key => $value) {
+			echo '<option value="'.$value->getStitchingservicesId().'">'.$value->getTitle().'</option>';
+		}
+	} ?>
+</select>

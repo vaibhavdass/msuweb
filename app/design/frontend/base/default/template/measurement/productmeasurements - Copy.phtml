@@ -1,0 +1,371 @@
+<form action="http://10.10.1.68/mymsu/measurementremember/save" method="post" id="measurement11">
+<div class="loading">
+	<img src="https://s-media-cache-ak0.pinimg.com/originals/e0/f5/a5/e0f5a5f8c2e378df4fddd75e26e9a5a3.gif" />
+</div>
+<div class="product_measurement">
+	<?php 
+	// $_product = Mage::getModel('catalog/product')->load($_REQUEST['product_id']);
+	$_product = Mage::getModel('catalog/product')->load(2);
+	$stitching_services = explode(',', $_product->getA27());
+	$attr = Mage::getModel('catalog/product')->getResource()->getAttribute("a27");
+	foreach ($stitching_services as $key => $value) {
+		$stitching_name = $attr->getSource()->getOptionText($value); ?>
+		<?php $frontcollection = Mage::getModel('styles/styles')->getCollection()->addFieldToFilter('stitching_service_id',$value)->addFieldToFilter('status',1);
+		if (sizeof($frontcollection) > 0) { ?>
+			<div class="tabed">
+				<a class="selectedTab" href="javascript:;"><?php echo $stitching_name; ?></a>
+			</div>
+			<input type="hidden" name="service" class="service" value="<?php echo $value; ?>" />
+			<?php if(Mage::getSingleton('customer/session')->isLoggedIn()) { ?>
+				<input type="hidden" name="customer_id" class="service" value="<?php echo Mage::getSingleton('customer/session')->getId(); ?>" />
+				<input type="hidden" name="product_id" class="service" value="<?php echo $_product->getId(); ?>" />
+				<?php $measurementremember = Mage::getModel('measurementremember/measurementremember')->getCollection()->addFieldToFilter('c_id',Mage::getSingleton('customer/session')->getId());
+				if (sizeof($measurementremember) > 0) {
+					echo '<div class="existing_measurements"><select class="existing_measurements">';
+						echo '<option>--- Please Select/Add New Measurement ---</option>';
+						foreach ($measurementremember as $key => $_remember){
+							echo '<option value="'.$_remember->getMeasurementrememberId().'">'.$_remember->getTitle().'</option>';
+						}
+						echo '<option value="new">Add New Measurements</option>';
+					echo '</select></div>';
+				}
+			} ?>
+			<div class="measure_details">
+				<div class="measure_detail" id="style_fit">
+					<div class="label_title"><label>1. Style & Fit</label><label class="right"><img src="http://www.renergyteda2014.hubvents.com/assets/images/arrowdown.gif"></label></div>
+					<?php if (sizeof($measurementremember) == 0) { ?>
+						<div class="style_fit_details" id="measurement_step">
+							<div class="front">
+								<div class="label_title1"><label>Front Styles</label></div>
+								<div class="front_style_details">
+									<ul class="front_style">
+									<?php foreach ($frontcollection as $key => $_front) { ?>
+										<li class="front_style_li">
+											<div><label><?php echo $_front->getTitle(); ?></label></div>
+											<div><img width="130" height="180" alt="<?php echo $_front->getTitle(); ?>" src="<?php echo Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA).$_front->getImage(); ?>"></div>
+											<div><input id="<?php echo $value; ?>" class="front_id" name="front_id" type="radio" value="<?php echo $_front->getStyleId(); ?>" /></div>
+										</li>
+									<?php } ?>
+									</ul>
+								</div>
+							</div>
+							<div class="back"></div>
+							<div class="sleeve"></div>
+							<div class="goto_nextstep"><button id="<?php echo $value; ?>" type="button" class="take_measurement"> Next Step </button></div>
+						</div>
+					<?php } ?>
+				</div>
+				<div class="measure_detail" id="measurement">
+					<div class="label_title"><label>2. Measurements</label><label class="right"><img src="http://www.renergyteda2014.hubvents.com/assets/images/arrowdown.gif"></label></div>
+					<div class="measurement_details" id="measurement_step"></div>
+				</div>
+				<div class="measure_detail" id="review">
+					<div class="label_title"><label>3. Review</label><label class="right"><img src="http://www.renergyteda2014.hubvents.com/assets/images/arrowdown.gif"></label></div>
+					<div class="measurement_review" id="measurement_step"></div>
+				</div>
+			</div>
+		<?php } ?>
+	<?php } ?>
+</div>
+</form>
+<style type="text/css">
+	div.existing_measurements {
+	    margin-bottom: 10px;
+	}
+	.selected_style_measurements {
+	    min-height: 280px;
+	}
+	.m_attr .value > textarea {
+	    width: 30%;
+	    line-height: 20px;
+	}	
+	.m_attr > .value > select {
+	    width: 30%;
+	}
+	.m_attr > .value > .measurement_textfield {
+	    height: 30px;
+	    width: 30%;
+	}
+	.m_attr > .value > .radio_button input {
+	    line-height: 30px;
+	    width: 15%;
+	    max-width: 25px;
+	}
+	.title {
+	    background: #cfcfcf none repeat scroll 0 0;
+	    font-size: 15px;
+	    margin-bottom: 20px;
+	    padding: 5px 10px;
+	}
+	.measurement_textfield{
+		font-size: 14px;
+    	height: 20px;
+	}
+	.label_title .right {
+		float: right !important;
+		margin-top: -8px;
+	}
+	.loading {
+		text-align: center;
+		display:none;
+		/*padding: 0 35%;
+		position: fixed;*/
+	}
+	.loading > img {
+    	position: fixed;
+	}
+	.goto_nextstep {
+    	text-align: right;
+	}
+	.goto_nextstep button {
+	    background: mediumaquamarine none repeat scroll 0 0;
+	    border: 0 none;
+	    font-size: 14px;
+	    font-weight: bold;
+	    margin-bottom: 10px;
+	    padding: 5px;
+	}
+	.additional_comment > input {
+	    margin-right: 5px;
+	    margin-left: 5px;
+	    margin-top: -3px;
+	}
+	.front_style_details {
+		height: 550px !important;
+		padding: 15px 20px 50px;
+	}
+	.back_style_details {
+		height: 250px !important;
+		padding: 15px 20px 20px;
+	}
+	.sleeve_style_details {
+		height: 250px !important;
+		padding: 15px 20px 20px;
+	}
+	.front_style_li {
+	    float: left;
+	    list-style: outside none none;
+	    margin-right: 1%;
+	    padding: 1%;
+	    text-align: center;
+	    width: 11%;
+	    height: 275px;
+	}
+	.back_style_li {
+	    float: left;
+	    list-style: outside none none;
+	    margin-right: 1%;
+	    padding: 1%;
+	    text-align: center;
+	    width: 11%;
+	    height: 220px;
+	}
+	.sleeve_style_li {
+	    float: left;
+	    list-style: outside none none;
+	    margin-right: 1%;
+	    padding: 1%;
+	    text-align: center;
+	    width: 11%;
+	    height: 220px;
+	}
+	.label_title1{
+		background: #e3e3e3 none repeat scroll 0 0;
+		font-size: 15px;
+		font-weight: bold;
+		margin-bottom: 5px;
+		padding: 3px;
+		text-align: center;
+	}
+	.label_title {
+		background: #cfcfcf none repeat scroll 0 0;
+		font-size: 16px;
+		padding: 1%;
+		margin-bottom:1%;
+	}
+	.tabed {
+	    background: rgba(0, 0, 0, 0) none repeat scroll 0 0;
+	    border-bottom: 1px solid #bdbdbd;
+	    font-size: 18px;
+	    height: 33px;
+	    margin: 8px 0 5px;
+	    /*width: 988px;*/
+	}
+	.tabed .selectedTab {
+	    background: #ffffff none repeat scroll 0 0;
+	    cursor: default;
+	    padding-bottom: 12px;
+	}
+	.tabed a {
+	    background: #ececec none repeat scroll 0 0;
+	    border-color: #b6b6b6 #b6b6b6 -moz-use-text-color;
+	    border-image: none;
+	    border-style: solid solid none;
+	    border-width: 1px 1px medium;
+	    color: #414141;
+	    cursor: default;
+	    float: left;
+	    height: 10px;
+	    line-height: 10px;
+	    margin-left: 5px;
+	    padding: 11px 15px;
+	    text-decoration: none;
+	}
+	.additional_comment {
+    	padding: 10px;
+    	height: 30px;
+    	line-height: 30px;
+	}
+	.additional_comment1 {
+    	padding: 10px;
+    	font-size: 14px;
+	}
+	.additional_comment > label {
+	    font-size: 14px;
+	    padding-right: 20px;
+	}
+	.measurement_block {
+    	padding: 20px;
+	}	
+	.measurement_attributes {
+	    padding: 10px 30px;
+	}
+	#submitting_measurement_option {
+	    line-height: 20px;
+	    padding: 5px;
+	}
+	.measuring_units, .my_stored_measurement, .simple_measurements {
+	    padding: 10px 30px;
+	}
+	.measuring_units > p, .simple_measurements > p {
+	    border: 1px solid;
+	    line-height: 40px;
+	    padding-left: 20px;
+	}
+	.m_attr {
+	    margin-bottom: 10px;
+	    padding: 5px;
+	}
+	.m_attr > .label {
+	    float: left;
+	    min-height: 35px;
+	    width: 30% !important;
+	}
+	.goto_nextstep{display:none;}
+	.review_your_measurements1 {
+	    font-size: 13px;
+	    line-height: 25px;
+	}
+	.review_your_measurements1 .label {
+	    float: left;
+	    text-align: left;
+	    width: 65% !important;
+	}
+	.review_your_measurements1 .value {
+	    float: left;
+	}
+	.li_review_selected_style {
+	    float: left;
+	    padding-bottom: 20px;
+	    text-align: center;
+	    width: 33.3333%;
+	}
+
+</style>
+<script type="text/javascript">
+    var jQuery = jQuery.noConflict();
+    jQuery(function(){
+        jQuery('.label_title').click(function() {
+        	jQuery(this).parent().parent().find('#measurement_step').show();
+		});
+        jQuery('.front_id').click(function() {
+            var data1 = "&front_id="+this.value+"&service="+jQuery('.service').val();
+            var url1 = '<?php echo Mage::getBaseUrl(); ?>measurement/measure/backstyles';
+			try {
+				jQuery.ajax({
+					url: url1,
+					type : 'post',
+					data: data1,
+					success: function(response){
+						if (response) {
+							var string = response;
+						} else{
+							var string = '<div class="back"><div class="label_title1"><label>Back Styles</label></div><div class="back_style_details"><p>Currently the Back Styles are Unavailable for this product</p></div></div>';
+						}
+						jQuery('.back').replaceWith(string);
+					}
+				});
+			} catch(e){ }
+        });
+        jQuery('.back_id').click(function() {
+			var front_id = 0;
+	    	jQuery(".back_id").each(function() {
+				if( jQuery(this).prop("checked")== true) {
+					front_id = jQuery(this).attr("value");
+				}
+			});
+	        var data1 = "&back_id="+this.value+"&front_id="+front_id+"&service="+jQuery('.service').val();
+            var url1 = '<?php echo Mage::getBaseUrl(); ?>measurement/measure/sleevestyles';
+			try {
+				jQuery.ajax({
+					url: url1,
+					type : 'post',
+					data: data1,
+					success: function(response){
+						if (response) {
+							var string = response;
+						} else{
+							var string = '<div class="sleeve"><div class="label_title1"><label>Sleeve Styles</label></div><div class="sleeve_style_details"><p>Currently the Sleeve Styles are Unavailable for this product</p></div></div>';
+						}
+						jQuery('.sleeve').replaceWith(string);
+					}
+				});
+			} catch(e){ }
+        });
+        jQuery('.take_measurement').click(function() {
+        	if (jQuery(this).parents('.measure_detail').attr('id') == 'style_fit') {
+        		var front_id = 0;
+	        	var back_id = 0;
+	        	var sleeve_id = 0;
+		    	jQuery(".front_id").each(function() {
+					if( jQuery(this).prop("checked")== true) {
+						front_id = jQuery(this).attr("value");
+					}
+				});
+		    	jQuery(".back_id").each(function() {
+					if( jQuery(this).prop("checked")== true) {
+						back_id = jQuery(this).attr("value");
+					}
+				});
+		    	jQuery(".sleeve_id").each(function() {
+					if( jQuery(this).prop("checked")== true) {
+						sleeve_id = jQuery(this).attr("value");
+					}
+				});
+				var data1 = "&front_id="+front_id+"&back_id="+back_id+"&sleeve_id="+sleeve_id+"&service="+jQuery('.service').val();
+	            var url1 = '<?php echo Mage::getBaseUrl(); ?>measurement/measure/getmeasurements';
+	            try {
+					jQuery.ajax({
+						url: url1,
+						type : 'post',
+						data: data1,
+						success: function(response){
+							if (response) {
+								var string = response;
+							} else{
+								var string = '<div id="measurement_step" class="measurement_details"><p>Currently the Measurements are Unavailable for this product</p></div>';
+							}
+							jQuery('.style_fit_details').toggle();
+							jQuery('.measurement_details').replaceWith(string);
+							// jQuery('.measurement_details').toggle();
+						}
+					});
+				} catch(e){ }
+        	} else if(jQuery(this).parents('.measure_detail').attr('id') == 'measurement'){
+        		alert('measurement');
+        	} else if(jQuery(this).parents('.measure_detail').attr('id') == 'review'){
+        		alert('review');
+        	}
+		});
+    });
+</script>

@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<config>
+    <modules>
+        <Neklo_ProductGridThumbnail>
+            <active>true</active>
+            <codePool>community</codePool>
+            <depends>
+                <Neklo_Core/>
+            </depends>
+            <extension_name>Product Grid Thumbnail</extension_name>
+            <free>1</free>
+            <url>product-grid-thumbnail-extension-for-magento</url>
+        </Neklo_ProductGridThumbnail>
+    </modules>
+</config>

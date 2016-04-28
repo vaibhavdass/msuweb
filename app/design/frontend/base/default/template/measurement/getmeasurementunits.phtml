@@ -1,0 +1,69 @@
+<div class="measuring_units">
+	<p>
+		<input id="<?php echo $_REQUEST['service']; ?>" class="measuring_unit" type="radio" name="measurment_units" value="in"> Inchs
+		<input id="<?php echo $_REQUEST['service']; ?>" class="measuring_unit" type="radio" name="measurment_units" value="cm"> Centemeters
+	</p>
+</div>
+<script type="text/javascript">
+    var jQuery = jQuery.noConflict();
+    jQuery(function(){
+		jQuery('input.measuring_unit').click(function() {
+			var front_id = 0;
+        	var back_id = 0;
+        	var sleeve_id = 0;
+        	var salwar_id = 0;
+        	var lehanga_id = 0;
+        	var tassel_id = 0;
+	    	jQuery(".front_id").each(function() {
+				if( jQuery(this).prop("checked")== true) {
+					front_id = jQuery(this).attr("value");
+				}
+			});
+	    	jQuery(".back_id").each(function() {
+				if( jQuery(this).prop("checked")== true) {
+					back_id = jQuery(this).attr("value");
+				}
+			});
+	    	jQuery(".sleeve_id").each(function() {
+				if( jQuery(this).prop("checked")== true) {
+					sleeve_id = jQuery(this).attr("value");
+				}
+			});
+			jQuery(".lehanga_id").each(function() {
+				if( jQuery(this).prop("checked")== true) {
+					lehanga_id = jQuery(this).attr("value");
+				}
+			});
+			jQuery(".salwar_id").each(function() {
+				if( jQuery(this).prop("checked")== true) {
+					salwar_id = jQuery(this).attr("value");
+				}
+			});
+			jQuery(".tassel_id").each(function() {
+				if( jQuery(this).prop("checked")== true) {
+					tassel_id = jQuery(this).attr("value");
+				}
+			});
+			var data1 = "&front_id="+front_id+"&back_id="+back_id+"&sleeve_id="+sleeve_id+"&lehanga_id="+lehanga_id+"&salwar_id="+salwar_id+"&tassel_id="+tassel_id+"&units="+this.value+"&service="+jQuery('.service').val();
+			var option = jQuery(".submitting_measurement_option:checked").val();
+			var url1 = '<?php echo Mage::getBaseUrl(); ?>measurement/measure/get'+option+'measurements';
+			if (option == 'standard') {
+				if (jQuery(window).width() <= 800) {
+					var url1 = '<?php echo Mage::getBaseUrl(); ?>measurement/measure/get'+option+'mobilemeasurements';
+				}
+			}
+			try {
+				jQuery.ajax({
+					url: url1,
+					type : 'post',
+					data: data1,
+					success: function(response){
+						if (response) {
+							jQuery('.'+option+'_measurements').replaceWith(response);
+						}
+					}
+				});
+			} catch(e){ }
+        });
+    });
+</script>

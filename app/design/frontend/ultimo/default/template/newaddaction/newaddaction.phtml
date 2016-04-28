@@ -1,0 +1,49 @@
+<div class="stitchingservices">
+	<form action="<?php echo Mage::getBaseUrl(); ?>newaddaction/index/add" method="post">
+		<input type="hidden" name="product_id" value="<?php echo $_POST['product_id']; ?>">
+		<?php $_product = Mage::getSingleton('catalog/product')->load($_POST['product_id']);
+		if($_product->isSaleable() && !is_null($_product->getA27())): ?>
+			<?php $quote_id = Mage::getSingleton('checkout/session')->getQuote()->getId();
+			$newaddaction = Mage::getModel('newaddaction/newaddaction')->getCollection()->addFieldToFilter('quote_id',$quote_id)->addFieldToFilter('product_id',$_product->getId())->getFirstItem();
+			?>
+	        <div class="stitching_services">
+	        	<div class="without_stitching_services">
+	                <input onclick="hidestitchingoptions();" type="radio" class="stitching_services" id="stitching_services" name="stitching_services" value="without_stitching" /> Without Stitching Service
+	            </div>
+
+	        	<div class="with_stitching_services">
+	                <input type="radio" class="stitching_services" id="stitching_services" name="stitching_services" value="with_stitching" checked="checked" onclick="showstitchingoptions();" /> With Stitching Service
+	                <div id="show_stitching_services" class="show_stitching_services" style="display:block;">
+		                <?php $stitching_services[] = $_product->getA27();
+		                $from = Mage::app()->getStore()->getBaseCurrencyCode();
+                		$to = Mage::app()->getStore()->getCurrentCurrencyCode();
+		                foreach ($stitching_services as $key => $_service) {
+		                    $_services = explode(',', $_service);
+		                    foreach ($_services as $key1 => $_service) {
+		                        $productModel = Mage::getModel('catalog/product');
+		                        $attr = $productModel->getResource()->getAttribute("a27");
+		                        $stitching_name = $attr->getSource()->getOptionText($_service);
+		                        $collection = Mage::getModel('stitchingservices/stitchingservices')->getCollection()->addFieldToFilter('stitching_service_id',$_service)->addFieldToFilter('status',1);
+		                        if (sizeof($collection) > 0) {
+		                            echo '<div class="row_type_stitching_title"><label>'.$stitching_name.'</label></div>';
+		                            foreach ($collection as $key2 => $_item) {
+		                                $service_type = $_item->getData(); ?>
+		                                <div class="row_type_stitching"><input <?php if( sizeof($newaddaction) > 0 && $newaddaction->{'get' . $_service}() == $service_type['stitchingservices_id'] ){ echo "checked"; } ?> class="type_stitching product-custom-option" type="radio" name="stitchingservices[<?php echo $_service?>]" value="<?php echo $service_type['stitchingservices_id']; ?>" onclick="opConfig.reloadPrice()" price="<?php echo $service_type['stitching_service_price']; ?>" />
+		                                <span class="label" style="float: left;"> <?php echo ' '.$service_type['title']; ?></span> 
+		                                <span class="stitching_price-notice">
+		                                    <span class="stitching_price"> &nbsp; <?php echo Mage::app()->getLocale()->currency(Mage::app()->getStore()->getCurrentCurrencyCode())->getSymbol().Mage::helper('directory')->currencyConvert($service_type['stitching_service_price'], $from, $to); ?></span>
+		                                </span>
+		                                </div>
+		                                <?php 
+		                            }
+		                        }
+		                    }
+		                }
+		                ?>
+		            </div>
+	            </div>
+	        </div>
+		<?php endif; ?>
+		<input class="stit_submit" type="submit" name="save" value="Save" />
+	</form>
+</div>

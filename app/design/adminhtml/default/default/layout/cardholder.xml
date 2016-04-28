@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<layout version="0.1.0">
+    <cardholder_adminhtml_cardholder_index>
+        <reference name="content">
+            <block type="cardholder/adminhtml_cardholder" name="cardholder" />
+        </reference>
+    </cardholder_adminhtml_cardholder_index>
+</layout>

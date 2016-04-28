@@ -1,0 +1,135 @@
+<?xml version="1.0"?>
+<config>
+    <modules>
+        <Naresh_Measurementremember>
+            <version>0.1.0</version>
+        </Naresh_Measurementremember>
+    </modules>
+    <frontend>
+        <routers>
+            <measurementremember>
+                <use>standard</use>
+                <args>
+                    <module>Naresh_Measurementremember</module>
+                    <frontName>measurementremember</frontName>
+                </args>
+            </measurementremember>
+        </routers>
+        <layout>
+            <updates>
+                <measurementremember>
+                    <file>measurementremember.xml</file>
+                </measurementremember>
+            </updates>
+        </layout>
+    </frontend>
+    <admin>
+        <routers>
+			<measurementremember>
+				<use>admin</use>
+				<args>
+					<module>Naresh_Measurementremember</module>
+					<frontName>measurementremember</frontName>
+				</args>
+			</measurementremember>
+        </routers>
+    </admin>
+    <adminhtml>
+		<!-- <menu>
+			<measurementremember module="measurementremember">
+				<title>M Remember</title>
+				<sort_order>71</sort_order>               
+				<children>
+					<items module="measurementremember">
+						<title>Manage M Remember</title>
+						<sort_order>0</sort_order>
+						<action>measurementremember/adminhtml_measurementremember</action>
+					</items>
+				</children>
+			</measurementremember>
+		</menu> -->
+		<acl>
+			<resources>
+				<all>
+					<title>Allow Everything</title>
+				</all>
+				<admin>
+					<children>
+						<Naresh_Measurementremember>
+							<title>Measurementremember Module</title>
+							<sort_order>10</sort_order>
+						</Naresh_Measurementremember>
+					</children>
+				</admin>
+			</resources>
+		</acl>
+		<layout>
+			<updates>
+				<measurementremember>
+					<file>measurementremember.xml</file>
+				</measurementremember>
+			</updates>
+		</layout>
+    </adminhtml>   
+    <global>
+        <models>
+            <measurementremember>
+                <class>Naresh_Measurementremember_Model</class>
+                <resourceModel>measurementremember_mysql4</resourceModel>
+            </measurementremember>
+            <measurementremember_mysql4>
+                <class>Naresh_Measurementremember_Model_Mysql4</class>
+                <entities>
+                    <measurementremember>
+                        <table>measurementremember</table>
+                    </measurementremember>
+                </entities>
+                <entities>
+                    <flatrates>
+                        <table>measurementremember_flatrates</table>
+                    </flatrates>
+                </entities>
+            </measurementremember_mysql4>
+        </models>
+        <resources>
+            <measurementremember_setup>
+                <setup>
+                    <module>Naresh_Measurementremember</module>
+                </setup>
+                <connection>
+                    <use>core_setup</use>
+                </connection>
+            </measurementremember_setup>
+            <measurementremember_write>
+                <connection>
+                    <use>core_write</use>
+                </connection>
+            </measurementremember_write>
+            <measurementremember_read>
+                <connection>
+                    <use>core_read</use>
+                </connection>
+            </measurementremember_read>
+        </resources>
+        <blocks>
+            <measurementremember>
+                <class>Naresh_Measurementremember_Block</class>
+            </measurementremember>
+        </blocks>
+        <helpers>
+            <measurementremember>
+                <class>Naresh_Measurementremember_Helper</class>
+            </measurementremember>
+        </helpers>
+        <!-- <events>
+            <sales_order_save_commit_after>
+                <observers>
+                    <measurementremember>
+                        <class>measurementremember/observer</class>
+                        <method>updateProductAfterOrder</method>
+                    </measurementremember>
+                </observers>
+            </sales_order_save_commit_after>
+        </events> -->
+    </global>
+</config>

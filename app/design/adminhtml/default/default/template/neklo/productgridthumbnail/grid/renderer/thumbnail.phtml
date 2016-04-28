@@ -1,0 +1,6 @@
+<?php /* @var $this Neklo_ProductGridThumbnail_Block_Adminhtml_Grid_Renderer_Thumbnail */ ?>
+<?php if ($this->canRender()): ?>
+    <div style="text-align:center;">
+        <img src="<?php echo Mage::helper('catalog/image')->init($this->getProduct(), 'thumbnail')->constrainOnly(false)->keepAspectRatio(false)->keepFrame(false)->resize($this->getImageWidth(), null) ?>" width="<?php echo $this->getImageWidth()?>" alt="<?php echo $this->escapeHtml($this->getProduct()->getName()) ?>" />
+    </div>
+<?php endif; ?>

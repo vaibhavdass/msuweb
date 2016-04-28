@@ -1,0 +1,74 @@
+<?php 
+	$salwarcollection = Mage::getModel('salwar/salwar')
+											->getCollection()
+											->addFieldToFilter('stitching_service', array('like' => '%'.$_REQUEST['stitching_type'].'%'))
+											->addFieldToFilter('status',1);
+?>
+<div class="sleeve">
+	<?php if(sizeof($salwarcollection) > 0) { ?>
+		<div class="label_title1"><label>Salwar Styles</label></div>
+		<div class="add_salwar_style_details" id="style_details">
+			<ul class="salwar_style" id="item_style3">
+				<?php $i = 0; foreach ($salwarcollection as $key => $_salwar) { ?>
+					<li class="salwar_style_li" data="<?php echo $i; ?>">
+					<div class="title"><label><?php echo $_salwar->getTitle(); ?></label></div>
+					<div class="image"><img width="130" height="180" alt="<?php echo $_salwar->getTitle(); ?>" src="<?php echo Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA).$_salwar->getImage(); ?>"></div>
+					<div class="select_option"><input id="<?php echo $_REQUEST['service']; ?>" class="salwar_id" name="salwar_id" type="radio" value="<?php echo $_salwar->getSalwarId(); ?>" /></div>
+					</li>
+				<?php $i++; } ?>
+			</ul>
+		</div>
+	<?php } ?>
+	<script type="text/javascript">
+		var jQuery = jQuery.noConflict();
+		jQuery(function(){
+			jQuery("#item_style3").flexisel();
+		    jQuery('.salwar_id').click(function() {
+        		var tassel_size = parseInt(jQuery('.tassel_size').val());
+		    	var service = parseInt(jQuery('select.add_avail_stitching_services').val());
+				var stitching_type = parseInt(jQuery('select.add_stitching_services_types').val());
+		    	if(tassel_size > 0) {
+		    		var data1 = "&stitching_type="+stitching_type+"&service="+service;
+		            var url1 = '<?php echo Mage::getBaseUrl(); ?>measurement/stored/gettasselstyles';
+		            try {
+		            	jQuery('#ajax_loader').show();
+						jQuery.ajax({
+							url: url1,
+							type : 'post',
+							data: data1,
+							success: function(response){
+								jQuery('#ajax_loader').hide();
+								if (response) {
+									var string = response;
+								} else{
+									var string = '<div class="tassel"><p>Currently the Measurements are Unavailable for this product</p></div>';
+								}
+								jQuery('.tassel').replaceWith(string);
+							}
+						});
+					} catch(e){ }
+		    	} else{
+	        		var data1 = '';
+			        var url1 = '<?php echo Mage::getBaseUrl(); ?>measurement/stored/units';
+					try {
+						jQuery('#ajax_loader').show();
+						jQuery.ajax({
+							url: url1,
+							type : 'post',
+							data: data1,
+							success: function(response){
+								jQuery('#ajax_loader').hide();
+								if (response) {
+									var string = response;
+								} else{
+									var string = '<div class="add_measuring_units"></div>';
+								}
+								jQuery('.add_measuring_units').replaceWith(string);
+							}
+						});
+					} catch(e){ }
+		    	}
+			});
+		});
+	</script>
+</div>

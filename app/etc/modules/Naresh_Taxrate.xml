@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<config>
+    <modules>
+        <Naresh_Taxrate>
+            <active>true</active>
+            <codePool>local</codePool>
+        </Naresh_Taxrate>
+    </modules>
+</config> 

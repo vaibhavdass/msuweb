@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<layout version="0.1.0">
+    <measurementremember_adminhtml_measurementremember_index>
+        <reference name="content">
+            <block type="measurementremember/adminhtml_measurementremember" name="measurementremember" />
+        </reference>
+    </measurementremember_adminhtml_measurementremember_index>
+</layout>

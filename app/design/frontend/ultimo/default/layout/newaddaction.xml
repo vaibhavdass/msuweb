@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<layout version="0.1.0">
+    <default>
+    </default>
+    <newaddaction_index_index>
+        <reference name="content">
+            <block type="newaddaction/newaddaction" name="newaddaction" template="newaddaction/newaddaction.phtml" />
+        </reference>
+    </newaddaction_index_index>
+</layout> 

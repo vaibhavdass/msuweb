@@ -1,0 +1,92 @@
+<?php
+/**
+ * Magento
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Academic Free License (AFL 3.0)
+ * that is bundled with this package in the file LICENSE_AFL.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://opensource.org/licenses/afl-3.0.php
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@magento.com so we can send you a copy immediately.
+ *
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magento.com for more information.
+ *
+ * @category    design
+ * @package     base_default
+ * @copyright   Copyright (c) 2006-2015 X.commerce, Inc. (http://www.magento.com)
+ * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+ */
+?>
+<div class="welcome-msg">
+    <p class="hello"><strong><?php echo $this->__('Hello, %s!', $this->escapeHtml($this->getCustomerName())) ?></strong></p>
+    <p><?php echo $this->__('From your My Account Dashboard you have the ability to view a snapshot of your recent account activity and update your account information. Select a link below to view or edit information.') ?></p>
+    <p>
+		<?php $customer_id = Mage::getSingleton('customer/session')->getCustomer()->getId();
+		$attribute = Mage::getSingleton('eav/config')->getAttribute('catalog_product', 'a27');
+		$attr_options = array();
+		foreach( $attribute->getSource()->getAllOptions(true, true) as $option ) {
+			if(strlen($option['label']) > 0){
+				$attr_options[$option['value']] = $option['label'];
+			}
+		}
+		$orders = Mage::getResourceModel('sales/order_collection')->addFieldToSelect('*')
+								->addFieldToFilter('customer_id', $customer_id)
+								->addFieldToFilter('state', array('in' => Mage::getSingleton('sales/order_config')->getVisibleOnFrontStates()))
+								->addFieldToFilter('status', array('in' => array('order_placed')))
+								->setOrder('created_at', 'desc');
+		$pending_measurements = array();
+		$count = 0;
+		foreach ($orders as $order):
+			$product_stitchings = Mage::getSingleton('newaddaction/newaddaction')->getCollection()->addFieldToFilter('quote_id',$order->getQuoteId());
+			if(sizeof($product_stitchings) > 0){
+				foreach($order->getAllVisibleItems() as $item){
+					$product_stitching = Mage::getSingleton('newaddaction/newaddaction')->getCollection()->addFieldToFilter('quote_id',$order->getQuoteId())->addFieldToFilter('product_id',$item->getProductId())->getFirstItem();
+					foreach ($attr_options as $key => $attr_option) {
+						if ($key == 3658 || $key == 5018) {
+						} else{
+							$stored_value = $product_stitching->{'get' .$key}();
+							if($stored_value > 0) {
+								$measurementremember = Mage::getSingleton('measurementremember/measurementremember')->getCollection()->addFieldToFilter('stitching_type',$stored_value)->addFieldToFilter('quote_id',$order->getQuoteId())->addFieldToFilter('order_id',$order->getEntityId())->getFirstItem();
+								if($measurementremember->getMeasurementrememberId() > 0){ }else{ 
+									$pending_measurements[$count]['order_id'] = $order->getEntityId();
+									$pending_measurements[$count]['realorder_id'] = $order->getRealOrderId();
+									$pending_measurements[$count]['stitching_type'] = $stored_value;
+									$pending_measurements[$count]['product_id'] = $item->getProductId();
+									$pending_measurements[$count]['sku'] = $item->getSku();
+									$count++;
+								}
+							}
+						}
+					}
+				}
+			}
+			// $count++;
+		endforeach;
+		if(sizeof($pending_measurements) > 0){ ?>
+			<div class="box-account box-pending_measurements">
+				<div class="box-head">
+					<h2>Pending Measurements</h2>
+				</div>
+				<table id="my-pending-measurements-table" class="data-table">
+					<thead><tr><th>Order #</th><th class="a-center">SKU</th><th class="a-center">Action</th></tr></thead>
+					<tbody>
+						<?php foreach($pending_measurements as $key => $_pending_measurement) { ?>
+							<tr class="pending_measurement_item">
+								<td class="order_id"><?php echo $_pending_measurement['realorder_id']; ?></td>
+								<td class="sku a-center"><?php echo $_pending_measurement['sku']; ?></td>
+								<td class="action a-center"><a href="<?php echo Mage::getBaseUrl(); ?>measurement?product_id=<?php echo $_pending_measurement['product_id']; ?>&stitching_type=<?php echo $_pending_measurement['stitching_type']; ?>&order_id=<?php echo $_pending_measurement['order_id']; ?>">Submit Now</a></td>
+							</tr>
+						<?php } ?>
+					</tbody>
+				</table>
+			</div>
+		<?php } ?>
+    </p>
+</div>
