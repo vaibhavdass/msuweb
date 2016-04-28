@@ -1,9 +1,0 @@
-<?xml version="1.0"?>
-<config>
-    <modules>
-        <Naresh_Measurement>
-            <active>true</active>
-            <codePool>local</codePool>
-        </Naresh_Measurement>
-    </modules>
-</config>

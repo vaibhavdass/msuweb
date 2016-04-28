@@ -1,8 +1,0 @@
-<?xml version="1.0"?>
-<layout version="0.1.0">
-    <taxrate_adminhtml_taxrate_index>
-        <reference name="content">
-            <block type="taxrate/adminhtml_taxrate" name="taxrate" />
-        </reference>
-    </taxrate_adminhtml_taxrate_index>
-</layout>
