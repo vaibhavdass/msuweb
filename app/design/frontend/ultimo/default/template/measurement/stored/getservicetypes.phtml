@@ -1,0 +1,45 @@
+<div class="add_stitching_services_types">
+    <?php $collection = Mage::getModel('stitchingservices/stitchingservices')->getCollection()
+                                                        ->addFieldToFilter('stitching_service_id', $_REQUEST['stitching_service'])
+                                                        ->addFieldToFilter('status', 1);
+        if (sizeof($collection) > 0) { ?>
+            <div class="m_attr">
+                <label class="label">Types in Service</label>
+                <label class="value">
+                    <select name="service_type" class="add_stitching_services_types">
+                        <option>--- Please Select ---</option>
+                        <?php foreach ($collection as $key => $_option) { ?>
+                            <option value="<?php echo $_option->getStitchingservicesId(); ?>"><?php echo $_option->getTitle(); ?></option>
+                        <?php } ?>
+                    </select>
+                </label>
+            </div>
+        <?php }
+    ?>
+</div>
+<script type="text/javascript">
+    var jQuery = jQuery.noConflict();
+    jQuery(function(){
+        jQuery('select.add_stitching_services_types').change(function() {
+            var data1 = "&service="+jQuery('select.add_avail_stitching_services').val()+"&stitching_type="+this.value;
+            var url1 = '<?php echo Mage::getBaseUrl(); ?>measurement/stored/getfrontstyles';
+            try {
+                jQuery('#ajax_loader').show();
+                jQuery.ajax({
+                    url: url1,
+                    type : 'post',
+                    data: data1,
+                    success: function(response){
+                        jQuery('#ajax_loader').hide();
+                        if (response) {
+                            var string = response;
+                        } else{
+                            var string = '<div class="add_measure_details"></div>';
+                        }
+                        jQuery('.add_measure_details').replaceWith(string);
+                    }
+                });
+            } catch(e){ }
+        });
+    });
+</script>

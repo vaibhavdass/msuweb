@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<layout version="0.1.0">
+    <salwar_adminhtml_salwar_index>
+        <reference name="content">
+            <block type="salwar/adminhtml_salwar" name="salwar" />
+        </reference>
+    </salwar_adminhtml_salwar_index>
+</layout>

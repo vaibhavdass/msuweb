@@ -1,0 +1,11 @@
+<select id="<?php echo $_REQUEST['name']; ?>_values" name="<?php echo $_REQUEST['name']; ?>_values[]" class="select multiselect" size="10" multiple="multiple">
+	<?php $attribute = Mage::getSingleton('eav/config')->getAttribute(Mage_Catalog_Model_Product::ENTITY, $_REQUEST['attribute']);
+	if ($attribute->usesSource()) {
+		$options = $attribute->getSource()->getAllOptions(false);
+		foreach ($options as $_option) { ?>
+			<option value="<?php echo $_option['value']; ?>"><?php echo $_option['label']; ?></option>
+		<?php }
+	} else{ ?>
+		<option>--- No Values ---</option>
+	<?php } ?>
+</select>

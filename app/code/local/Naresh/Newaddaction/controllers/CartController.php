@@ -1,0 +1,336 @@
+<?php
+require_once 'Mage/Checkout/controllers/CartController.php';
+class Naresh_Newaddaction_CartController extends Mage_Checkout_CartController
+{
+     /**
+     * Add product to shopping cart action
+     * Overides the addAction() function from Mage_Checkout_CartController.
+     */
+    public function addAction()
+    {
+        if (!$this->_validateFormKey()) {
+            $this->_goBack();
+            return;
+        }
+        $cart   = $this->_getCart();
+        $params = $this->getRequest()->getParams();
+        try {
+            if (isset($params['qty'])) {
+                $filter = new Zend_Filter_LocalizedToNormalized(
+                    array('locale' => Mage::app()->getLocale()->getLocaleCode())
+                );
+                $params['qty'] = $filter->filter($params['qty']);
+            }
+
+            $product = $this->_initProduct();
+            $related = $this->getRequest()->getParam('related_product');
+
+            /**
+             * Check product availability
+             */
+            if (!$product) {
+                $this->_goBack();
+                return;
+            }
+
+            $cart->addProduct($product, $params);
+            if (!empty($related)) {
+                $cart->addProductsByIds(explode(',', $related));
+            }
+
+            $cart->save();
+
+            $this->_getSession()->setCartWasUpdated(true);
+
+            $from = Mage::app()->getStore()->getBaseCurrencyCode();
+            $to = Mage::app()->getStore()->getCurrentCurrencyCode();
+            $attribute = Mage::getModel('eav/config')->getAttribute('catalog_product', 'a27');
+            $quote1 = Mage::getSingleton('checkout/session')->getQuote();
+            $options = array();
+            foreach( $attribute->getSource()->getAllOptions(true, true) as $option ) {
+                if(strlen($option['label']) > 0){
+                    $options[$option['value']] = $option['label'];
+                }
+            }
+            $newaddaction_collection = Mage::getModel('newaddaction/newaddaction');
+            $db_value = $newaddaction_collection->getCollection()->addFieldToSelect('service_id')->addFieldToFilter('quote_id',$quote1->getId())->addFieldToFilter('product_id',$params['product'])->getFirstItem();
+            if ( isset($params['stitching_services']) && $params['stitching_services'] == 'with_stitching') {
+                if( isset($db_value['service_id']) ){
+                    $model = $newaddaction_collection->load($db_value['service_id']);
+                    $weight = 0;
+                    $stitching_cost = 0;
+                    $base_stitching_cost = 0;
+                    foreach ($options as $key => $value) {
+                        if (isset($params['stitchingservices'][$key])) {
+                            $stit_service = Mage::getModel('stitchingservices/stitchingservices')->getCollection()->addFieldToSelect('*')->addFieldToFilter('stitching_service_id',$key)->addFieldToFilter('stitchingservices_id',$params['stitchingservices'][$key])->addFieldToFilter('status',1)->getFirstItem();
+                            if (sizeof($stit_service) > 0) {
+                                $weight += $stit_service['weight'];
+                                $base_stitching_cost += $stit_service['stitching_service_price'];
+                                $stit_price = 0;
+                                $stit_price = Mage::helper('directory')->currencyConvert($stit_service['stitching_service_price'], $from, $to);
+                                $stitching_cost += $stit_price;
+                                $model->{'set' . $key}($params['stitchingservices'][$key]);
+                                $model->{'set' . $key . 'Price'}($stit_price);
+                            }
+                        } else{
+                            $model->{'set' . $key}(0);
+                            $model->{'set' . $key . 'Price'}(0);
+                        }
+                    }
+                    $model->setQuoteId($quote1->getId());
+                    $model->setProductId($params['product']);
+                    $model->setBaseCurrency($from);
+                    $model->setCurrentCurrency($to);
+                    $model->setWeight($weight);
+                    $model->setTotal($stitching_cost);
+                    $model->setBaseTotal($base_stitching_cost);
+                    $model->save();
+                }else{
+                    $weight = 0;
+                    $stitching_cost = 0;
+                    $base_stitching_cost = 0;
+                    foreach ($options as $key => $value) {
+                        if (isset($params['stitchingservices'][$key])) {
+                            $stit_service = Mage::getModel('stitchingservices/stitchingservices')->getCollection()->addFieldToSelect('*')->addFieldToFilter('stitching_service_id',$key)->addFieldToFilter('stitchingservices_id',$params['stitchingservices'][$key])->addFieldToFilter('status',1)->getFirstItem();
+                            if (sizeof($stit_service) > 0) {
+                                $weight += $stit_service['weight'];
+                                $base_stitching_cost += $stit_service['stitching_service_price'];
+                                $stit_price = 0;
+                                $stit_price = Mage::helper('directory')->currencyConvert($stit_service['stitching_service_price'], $from, $to);
+                                $stitching_cost += $stit_price;
+                                $data[$key] = $params['stitchingservices'][$key];
+                                $data[$key.'_price'] = $stit_price;
+                            }
+                        }
+                    }
+                    $data['product_id'] = $params['product'];
+                    $data['quote_id'] = $quote1->getId();
+                    $data['base_currency'] = $from;
+                    $data['current_currency'] = $to;
+                    $data['weight'] = $weight;
+                    $data['base_total'] = $base_stitching_cost;
+                    $data['total'] = $stitching_cost;
+                    $newaddaction_collection->setData($data)->save();
+                }
+            } else{
+                $stitching_cost = 0;
+                if( isset($db_value['service_id']) ){
+                    Mage::getModel('newaddaction/newaddaction')->load($db_value['service_id'])->delete();
+                }
+            }
+            $cartItems = $quote1->getAllVisibleItems();
+            foreach ($cartItems as $item) {
+                if ($params['product'] == $item->getProductId()) {
+                    $_product = $item->getProduct();
+                    $price = Mage::helper('directory')->currencyConvert($_product->getPrice(), $from, $to); 
+                    $price += $stitching_cost;
+                    $item->setOriginalCustomPrice($price);
+                    $item->setCustomPrice($price);
+                    $item->save();
+                    $quote1->collectTotals()->save();
+                }
+            }
+
+            /**
+             * @todo remove wishlist observer processAddToCart
+             */
+            Mage::dispatchEvent('checkout_cart_add_product_complete',
+                array('product' => $product, 'request' => $this->getRequest(), 'response' => $this->getResponse())
+            );
+
+            if (!$this->_getSession()->getNoCartRedirect(true)) {
+                if (!$cart->getQuote()->getHasError()) {
+                    $message = $this->__('%s was added to your shopping cart.', Mage::helper('core')->escapeHtml($product->getName()));
+                    $this->_getSession()->addSuccess($message);
+                }
+                $this->_goBack();
+            }
+        } catch (Mage_Core_Exception $e) {
+            if ($this->_getSession()->getUseNotice(true)) {
+                $this->_getSession()->addNotice(Mage::helper('core')->escapeHtml($e->getMessage()));
+            } else {
+                $messages = array_unique(explode("\n", $e->getMessage()));
+                foreach ($messages as $message) {
+                    $this->_getSession()->addError(Mage::helper('core')->escapeHtml($message));
+                }
+            }
+
+            $url = $this->_getSession()->getRedirectUrl(true);
+            if ($url) {
+                $this->getResponse()->setRedirect($url);
+            } else {
+                $this->_redirectReferer(Mage::helper('checkout/cart')->getCartUrl());
+            }
+        } catch (Exception $e) {
+            $this->_getSession()->addException($e, $this->__('Cannot add the item to shopping cart.'));
+            Mage::logException($e);
+            $this->_goBack();
+        }
+    }
+
+    public function deleteAction()
+    {
+        $id = (int) $this->getRequest()->getParam('id');
+        if ($id) {
+            try {
+                $allitems = Mage::getSingleton('checkout/cart')->getQuote()->getAllItems();
+                if(sizeof($allitems) > 0){
+                    foreach ($allitems as $item) {
+                        if($item->getItemId() == $id) {
+                            $service_id = Mage::getModel('newaddaction/newaddaction')->getCollection()->addFieldToFilter('quote_id',Mage::getSingleton('checkout/session')->getQuote()->getId())->addFieldToFilter('product_id',$item->getProductId())->getFirstItem();
+                            Mage::getModel('newaddaction/newaddaction')->load($service_id->getServiceId())->delete();
+                        }
+                    }
+                }
+                $this->_getCart()->removeItem($id)
+                  ->save();
+            } catch (Exception $e) {
+                $this->_getSession()->addError($this->__('Cannot remove the item.'));
+                Mage::logException($e);
+            }
+        }
+        $this->_redirectReferer(Mage::getUrl('*/*'));
+    }
+
+    public function add1Action()
+    {
+        if (!$this->_validateFormKey()) {
+            $this->_goBack();
+            return;
+        }
+        $cart   = $this->_getCart();
+        $params = $this->getRequest()->getParams();
+        try {
+            if (isset($params['qty'])) {
+                $filter = new Zend_Filter_LocalizedToNormalized(
+                    array('locale' => Mage::app()->getLocale()->getLocaleCode())
+                );
+                $params['qty'] = $filter->filter($params['qty']);
+            }
+
+            $product = $this->_initProduct();
+            $related = $this->getRequest()->getParam('related_product');
+
+            /**
+             * Check product availability
+             */
+            if (!$product) {
+                $this->_goBack();
+                return;
+            }
+
+            $quoteItem = $cart->addProduct($product, $params);
+            if (!empty($related)) {
+                $cart->addProductsByIds(explode(',', $related));
+            }
+
+            $cart->save();
+
+            // $quote = $this->_getSession()->getData();
+            $from = Mage::app()->getStore()->getBaseCurrencyCode();
+            $to = Mage::app()->getStore()->getCurrentCurrencyCode();
+            $attribute = Mage::getModel('eav/config')->getAttribute('catalog_product', 'a27');
+            $options = array();
+            foreach( $attribute->getSource()->getAllOptions(true, true) as $option ) {
+                if(strlen($option['label']) > 0){
+                    $options[$option['value']] = $option['label'];
+                }
+            }
+            // if ($params['stitching_services'] == 'with_stitching') {
+            //     $data['quote_id'] = Mage::getSingleton('checkout/session')->getQuote()->getId();
+            //     $data['product_id'] = $quote['last_added_product_id'];
+            //     $data['base_currency'] = $from;
+            //     $data['current_currency'] = $to;
+            //     $newaddaction_collection = Mage::getModel('newaddaction/newaddaction');
+            //     $db_value = $newaddaction_collection->getCollection()->addFieldToSelect('service_id')->addFieldToFilter('quote_id',$data['quote_id'])->addFieldToFilter('product_id',$data['product_id'])->getFirstItem();
+            //     if( isset($db_value['service_id']) ){
+            //         $newaddaction_collection->load($db_value->getServiceId());
+            //     }
+            //     $stitching_cost = 0;
+            //     $base_stitching_cost = 0;
+            //     $weight = 0;
+            //     foreach ($params['stitchingservices'] as $key => $value) {
+            //         $stit_service = Mage::getModel('stitchingservices/stitchingservices')->getCollection()->addFieldToSelect('*')->addFieldToFilter('stitching_service_id',$key)->addFieldToFilter('stitchingservices_id',$value)->addFieldToFilter('status',1)->getFirstItem();
+            //         if (sizeof($stit_service) > 0) {
+            //             $data[$key] = $value;
+            //             $weight += $stit_service['weight'];
+            //             $base_stitching_cost += $stit_service['stitching_service_price'];
+            //             $stitching_price = Mage::helper('directory')->currencyConvert($stit_service['stitching_service_price'], $from, $to);
+            //             $data[$key.'_price'] = $stitching_price;
+            //             $stitching_cost += $stitching_price;
+            //             if( isset($db_value['service_id']) ){
+            //                 $newaddaction_collection->{'set' . $key}($value);
+            //                 $newaddaction_collection->{'set' . $key . 'Price'}($stitching_price);
+            //                 $newaddaction_collection->save();
+            //             }
+            //         }
+            //     }
+            //     $data['weight'] = $weight;
+            //     $data['base_total'] = $base_stitching_cost;
+            //     $data['total'] = $stitching_cost;
+            //     if( isset($db_value['service_id']) ){
+            //         $newaddaction_collection->setWeight($weight);
+            //         $newaddaction_collection->setTotal($stitching_cost);
+            //         $newaddaction_collection->setBaseTotal($base_stitching_cost);
+            //         $newaddaction_collection->save();
+            //     }else{
+            //         $newaddaction_collection->setData($data);
+            //         $newaddaction_collection->save();
+            //     }
+            // }else{
+            //     $data['base_total'] = 0;
+            //     $data['total'] = 0;
+            // }
+
+            // $quote1 = Mage::getSingleton('checkout/session')->getQuote();
+            // $cartItems = $quote1->getAllVisibleItems();
+            // foreach ($cartItems as $item) {
+            //     if ($data['product_id'] == $item->getProductId()) {
+            //         $_product = $item->getProduct();
+            //         $price = Mage::helper('directory')->currencyConvert($_product->getPrice(), $from, $to);
+            //         $price += $data['total'];
+            //         $item->setOriginalCustomPrice($price);
+            //         $item->save();
+            //     }
+            // }
+
+            // $quote1->collectTotals()->save();
+            $this->_getSession()->setCartWasUpdated(true);
+
+            /**
+             * @todo remove wishlist observer processAddToCart
+             */
+            Mage::dispatchEvent('checkout_cart_add_product_complete',
+                array('product' => $product, 'request' => $this->getRequest(), 'response' => $this->getResponse())
+            );
+
+            if (!$this->_getSession()->getNoCartRedirect(true)) {
+                if (!$cart->getQuote()->getHasError()) {
+                    $message = $this->__('% s was added to your shopping cart.', Mage::helper('core')->escapeHtml($product->getName()));
+                    $this->_getSession()->addSuccess($message);
+                }
+                $this->_goBack();
+            }
+        } catch (Mage_Core_Exception $e) {
+            if ($this->_getSession()->getUseNotice(true)) {
+                $this->_getSession()->addNotice(Mage::helper('core')->escapeHtml($e->getMessage()));
+            } else {
+                $messages = array_unique(explode("\n", $e->getMessage()));
+                foreach ($messages as $message) {
+                    $this->_getSession()->addError(Mage::helper('core')->escapeHtml($message));
+                }
+            }
+
+            $url = $this->_getSession()->getRedirectUrl(true);
+            if ($url) {
+                $this->getResponse()->setRedirect($url);
+            } else {
+                $this->_redirectReferer(Mage::helper('checkout/cart')->getCartUrl());
+            }
+        } catch (Exception $e) {
+            $this->_getSession()->addException($e, $this->__('Cannot add the item to shopping cart.'));
+            Mage::logException($e);
+            $this->_goBack();
+        }
+    }
+}

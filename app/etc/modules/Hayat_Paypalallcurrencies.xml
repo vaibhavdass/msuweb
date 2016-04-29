@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<config>
+    <modules>
+        <Hayat_Paypalallcurrencies>
+            <active>true</active>
+            <codePool>local</codePool>
+        </Hayat_Paypalallcurrencies>
+    </modules>
+</config>

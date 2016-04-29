@@ -1,0 +1,38 @@
+<div class="standard_measurements">
+	<div class="mobile">
+		<?php
+			$service = $_REQUEST['service'];
+			$row = 0;
+			if (($handle = fopen("C://xampp/htdocs/mymsu/media/mobile1.csv", "r")) !== FALSE) {
+				echo '<table>';
+			    while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
+			        $num = count($data);
+		        	$row++;
+		        	if( ($data[1] == $service) || ($data[1] == 'TYPE') || ($data[1] == '') ){
+		        		echo '<tr>';
+				        for ($c=0; $c < $num; $c++) {
+				        	if ($row == 1) {
+				        		if ($c == 1) {
+				        			continue;
+				        		}
+				        		if ($c == 0) {
+				        			echo '<td></td>';
+				        		} else{
+				        			echo '<td><input name="'.$service.'" type="radio" value="'.$data[$c].'" /></td>';
+				        		}
+				        	}else{
+				        		if ($c == 1) {
+				        			continue;
+				        		}
+				        		echo '<td>'.$data[$c] .'</td>';
+				        	}
+				        }
+				        echo '</tr>';
+		        	}
+			    }
+			    echo '</table>';
+			    fclose($handle);
+			}
+		?>
+	</div>
+</div>

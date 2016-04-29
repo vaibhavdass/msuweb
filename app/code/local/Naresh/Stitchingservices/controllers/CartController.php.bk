@@ -1,0 +1,180 @@
+<?php
+require_once 'Mage/Checkout/controllers/CartController.php';
+class Naresh_Stitchingservices_CartController extends Mage_Checkout_CartController
+{
+     /**
+     * Add product to shopping cart action
+     * Overides the addAction() function from Mage_Checkout_CartController.
+     */
+    public function deleteAction()
+    {
+    	Mage::log('Test',null,'123.log');
+        $id = (int) $this->getRequest()->getParam('id');
+        if ($id) {
+            try {
+                $this->_getCart()->removeItem($id)
+                  ->save();
+                $service_id = Mage::getModel('newaddaction/newaddaction')->getCollection()->addFieldToSelect('service_id')->addFieldToFilter('quote_id',Mage::getSingleton('checkout/session')->getQuote()->getId())->addFieldToFilter('product_id',$id);
+                Mage::log($service_id);
+                Mage::getModel('newaddaction/newaddaction')->load($service_id)->delete();
+            } catch (Exception $e) {
+                $this->_getSession()->addError($this->__('Cannot remove the item.'));
+                Mage::logException($e);
+            }
+        }
+        $this->_redirectReferer(Mage::getUrl('*/*'));
+    }
+    public function addAction()
+    {
+    	Mage::log('Test',null,'stit.log');
+		$cart   = $this->_getCart();
+		$params = $this->getRequest()->getParams();
+		Mage::log('Stitching Services');
+		try {
+			if (isset($params['qty'])) {
+				$filter = new Zend_Filter_LocalizedToNormalized(
+					array('locale' => Mage::app()->getLocale()->getLocaleCode())
+				);
+				$params['qty'] = $filter->filter($params['qty']);
+			}
+			$product = $this->_initProduct();
+			$related = $this->getRequest()->getParam('related_product');
+
+			/**
+			* Check product availability
+			*/
+			if (!$product) {
+				$this->_goBack();
+				return;
+			}
+
+			$cart->addProduct($product, $params);
+			if (!empty($related)) {
+				$cart->addProductsByIds(explode(',', $related));
+			}
+
+			$cart->save();
+
+			$this->_getSession()->setCartWasUpdated(true);
+
+			/**
+			* @todo remove wishlist observer processAddToCart
+			*/
+			Mage::dispatchEvent('checkout_cart_add_product_complete',
+						array('product' => $product, 'request' => $this->getRequest(), 'response' => $this->getResponse())
+			);
+
+
+			$read = Mage::getSingleton('core/resource')->getConnection('core_read');
+			$write = Mage::getSingleton('core/resource')->getConnection('core_write');
+			$params = $this->getRequest()->getParams();
+			$_product = Mage::getSingleton('catalog/product')->load($params['product']);
+			if ($params['stitching_services'] == 'with_stitching') {
+				$cart_id = Mage::getSingleton('checkout/session')->getQuote()->getId();
+				$params['stitchingservices']['quote_id'] = $cart_id;
+				$params['stitchingservices']['product_sku'] = $_product->getSku();
+				$stitching_weight = 0;
+				if (isset($params['stitchingservices']['9'])) {
+					$stitching_price = Mage::getSingleton('stitchingservices/stitchingservices')->load($params['stitchingservices']['9'])->getData();
+					$params['stitchingservices']['9_price'] = $stitching_price['stitching_service_price'];
+					$stitching_weight += $stitching_price['weight'];
+				}else { $params['stitchingservices']['9_price'] = 0; }
+				if (isset($params['stitchingservices']['10'])) {
+					$stitching_price = Mage::getSingleton('stitchingservices/stitchingservices')->load($params['stitchingservices']['10'])->getData();
+					$params['stitchingservices']['10_price'] = $stitching_price['stitching_service_price'];
+					$stitching_weight += $stitching_price['weight'];
+				}else { $params['stitchingservices']['10_price'] = 0; }
+				if (isset($params['stitchingservices']['11'])) {
+					$stitching_price = Mage::getSingleton('stitchingservices/stitchingservices')->load($params['stitchingservices']['11'])->getData();
+					$params['stitchingservices']['11_price'] = $stitching_price['stitching_service_price'];
+					$stitching_weight += $stitching_price['weight'];
+				}else { $params['stitchingservices']['11_price'] = 0; }
+				if (isset($params['stitchingservices']['12'])) {
+					$stitching_price = Mage::getSingleton('stitchingservices/stitchingservices')->load($params['stitchingservices']['12'])->getData();
+					$params['stitchingservices']['12_price'] = $stitching_price['stitching_service_price'];
+					$stitching_weight += $stitching_price['weight'];
+				}else { $params['stitchingservices']['12_price'] = 0; }
+				if (isset($params['stitchingservices']['21'])) {
+					$stitching_price = Mage::getSingleton('stitchingservices/stitchingservices')->load($params['stitchingservices']['21'])->getData();
+					$params['stitchingservices']['21_price'] = $stitching_price['stitching_service_price'];
+					$stitching_weight += $stitching_price['weight'];
+				}else { $params['stitchingservices']['21_price'] = 0; }
+
+				$params['stitchingservices']['weight'] = $stitching_weight;
+				$params['stitchingservices']['total'] = $params['stitchingservices']['9_price']+$params['stitchingservices']['10_price']+$params['stitchingservices']['11_price']+$params['stitchingservices']['12_price']+$params['stitchingservices']['21_price'];
+				// $product_weight = $_product->getWeight();
+				// $stitching_weight = (float)$stitching_weight;
+				// $final_weight = $stitching_weight + $_product->getWeight();
+				// $product_price = $_product->getFinalPrice();
+				// $quote_item = Mage::getSingleton('sales/quote_item')->getCollection()
+				// 						->addFieldToFilter('quote_id', $cart_id)
+				// 						->addFieldToFilter('product_id', $_product->getId())
+				// 						->setCurPage(1)->setPageSize(1)->getData();
+				// $quote_item = Mage::getSingleton('sales/quote_item')->load($quote_item[0]['item_id']);
+				// $weight1 = ($quote_item->getWeight()+$stitching_weight)*$quote_item->getQty();
+				// Mage::log($weight1);
+				// echo $query1 = 'UPDATE `sales_flat_quote_item` SET `weight` = '.$weight1.' WHERE `item_id` = '.$quote_item->getItemId();
+				// Mage::log($query1);
+				// $write->query($query1);
+				// $product_id =  Mage::getSingleton('checkout/session')->getLastAddedProductId(true);
+				// $write->query("UPDATE `sales_flat_quote_item` SET `weight` = ".$weight1." WHERE `sales_flat_quote_item`.`item_id` = 109");
+				$params['stitchingservices']['created_time'] = now();
+				$sql = 'SELECT * FROM `stored_product_stitchingservices` WHERE `quote_id` = '.$cart_id.' AND `product_sku` = '.$params['stitchingservices']['product_sku'];
+				$results = $read->fetchAll($sql);
+				if(sizeof($results) > 0){
+					if (isset($params['stitchingservices']['9'])) {
+						$params['stitchingservices']['9'] = $params['stitchingservices']['9'];
+					}else { $params['stitchingservices']['9'] = 0; }
+					if (isset($params['stitchingservices']['10'])) {
+						$params['stitchingservices']['10'] = $params['stitchingservices']['10'];
+					}else { $params['stitchingservices']['10'] = 0; }
+					if (isset($params['stitchingservices']['11'])) {
+						$params['stitchingservices']['11'] = $params['stitchingservices']['11'];
+					}else { $params['stitchingservices']['11'] = 0; }
+					if (isset($params['stitchingservices']['12'])) {
+						$params['stitchingservices']['12'] = $params['stitchingservices']['12'];
+					}else { $params['stitchingservices']['12'] = 0; }
+					if (isset($params['stitchingservices']['21'])) {
+						$params['stitchingservices']['21'] = $params['stitchingservices']['21'];
+					}else { $params['stitchingservices']['21'] = 0; }
+
+					$query = 'UPDATE `stored_product_stitchingservices` SET `total` = '.$params['stitchingservices']['total'].', `weight` = '.$params['stitchingservices']['weight'].', `9` = '.$params['stitchingservices']['9'].', `9_price` = '.$params['stitchingservices']['9_price'].', `10` = '.$params['stitchingservices']['10'].', `10_price` = '.$params['stitchingservices']['10_price'].', `11` = '.$params['stitchingservices']['11'].', `11_price` = '.$params['stitchingservices']['11_price'].', `12` = '.$params['stitchingservices']['12'].', `12_price` = '.$params['stitchingservices']['12_price'].', `21` = '.$params['stitchingservices']['21'].', `21_price` = '.$params['stitchingservices']['21_price'].' WHERE `stored_id` = '.$results[0]['stored_id'];
+					$write->query($query);
+				}else {
+					$model = Mage::getSingleton('stored/stored');
+					$model->setData($params['stitchingservices']);
+					$model->save();
+				}
+			}
+
+
+			if (!$this->_getSession()->getNoCartRedirect(true)) {
+				if (!$cart->getQuote()->getHasError()) {
+					$message = $this->__('%s was added to your shopping cart.', Mage::helper('core')->escapeHtml($product->getName()));
+					$this->_getSession()->addSuccess($message);
+				}
+				$this->_goBack();
+			}
+		} catch (Mage_Core_Exception $e) {
+			if ($this->_getSession()->getUseNotice(true)) {
+				$this->_getSession()->addNotice(Mage::helper('core')->escapeHtml($e->getMessage()));
+			} else {
+				$messages = array_unique(explode("\n", $e->getMessage()));
+				foreach ($messages as $message) {
+					$this->_getSession()->addError(Mage::helper('core')->escapeHtml($message));
+				}
+			}
+
+			$url = $this->_getSession()->getRedirectUrl(true);
+			if ($url) {
+				$this->getResponse()->setRedirect($url);
+			} else {
+				$this->_redirectReferer(Mage::helper('checkout/cart')->getCartUrl());
+			}	
+		} catch (Exception $e) {
+			$this->_getSession()->addException($e, $this->__('Cannot add the item to shopping cart.'));
+			Mage::logException($e);
+			$this->_goBack();
+		}
+    }
+}

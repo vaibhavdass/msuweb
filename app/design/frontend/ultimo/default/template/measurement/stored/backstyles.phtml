@@ -1,0 +1,59 @@
+<?php 
+	$backcollection = Mage::getModel('back/back')
+											->getCollection()
+											->addFieldToFilter('status',1)
+											->addFieldToFilter('front_id',$_REQUEST['front_id']);
+?>
+<div class="back">
+	<div class="label_title1"><label>Back Styles</label></div>
+	<div class="add_back_style_details" id="style_details">
+		<?php if(sizeof($backcollection) > 0) { ?>
+			<ul class="back_style" id="item_style1">
+				<?php $i = 0; foreach ($backcollection as $key => $_back) { ?>
+					<li class="back_style_li" data="<?php echo $i; ?>">
+					<div class="title"><label><?php echo $_back->getTitle(); ?></label></div>
+					<div class="image"><img width="130" height="180" alt="<?php echo $_back->getTitle(); ?>" src="<?php echo Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA).$_back->getImage(); ?>"></div>
+					<div class="select_option"><input id="<?php echo $_REQUEST['service']; ?>" class="back_id" name="back_id" type="radio" value="<?php echo $_back->getBackId(); ?>" /></div>
+					</li>
+				<?php $i++; } ?>
+			</ul>
+		<?php } else { ?>
+			<p>Currently the Back Styles are Unavailable for this product</p>
+		<?php }?>
+	<script type="text/javascript">
+		var jQuery = jQuery.noConflict();
+		jQuery(function(){
+			jQuery("#item_style1").flexisel();
+		    jQuery('.back_id').click(function() {
+		    	var front_id = 0;
+		    	jQuery(".back_id").each(function() {
+					if( jQuery(this).prop("checked")== true) {
+						front_id = jQuery(this).attr("value");
+					}
+				});
+				var service = parseInt(jQuery('select.add_avail_stitching_services').val());
+				var stitching_type = parseInt(jQuery('select.add_stitching_services_types').val());
+		        var data1 = "&back_id="+this.value+"&front_id="+front_id+"&service="+service+"&service_type="+stitching_type;
+		        var url1 = '<?php echo Mage::getBaseUrl(); ?>measurement/stored/getsleevestyles';
+				try {
+					jQuery('#ajax_loader').show();
+					jQuery.ajax({
+						url: url1,
+						type : 'post',
+						data: data1,
+						success: function(response){
+							jQuery('#ajax_loader').hide();
+							if (response) {
+								var string = response;
+							} else{
+								var string = '<div class="sleeve"><div class="label_title1"><label>Sleeve Styles</label></div><div class="sleeve_style_details"><p>Currently the Sleeve Styles are Unavailable for this product</p></div></div>';
+							}
+							jQuery('.sleeve').replaceWith(string);
+						}
+					});
+				} catch(e){ }
+		    });
+		});
+	</script>
+	</div>
+</div>

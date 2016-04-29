@@ -1,0 +1,221 @@
+<?php $frontcollection = Mage::getModel('styles/styles')
+											->getCollection()
+											->addFieldToFilter('status',1)
+											->addFieldToFilter('stitching_service_id',$_REQUEST['service'])
+											->addFieldToFilter('stitching_service', array('like' => '%'.$_REQUEST['stitching_type'].'%'));
+	$lehangacollection = Mage::getModel('lehanga/lehanga')
+											->getCollection()
+											->addFieldToFilter('stitching_service_id',$_REQUEST['service'])
+											->addFieldToFilter('stitching_service', array('like' => '%'.$_REQUEST['stitching_type'].'%'))
+											->addFieldToFilter('status',1);
+	$salwarcollection = Mage::getModel('salwar/salwar')
+											->getCollection()
+											->addFieldToFilter('stitching_service_id',$_REQUEST['service'])
+											->addFieldToFilter('stitching_service', array('like' => '%'.$_REQUEST['stitching_type'].'%'))
+											->addFieldToFilter('status',1);
+	$tasselcollection = Mage::getModel('tassel/tassel')
+											->getCollection()
+											->addFieldToFilter('stitching_service_id',$_REQUEST['service'])
+											->addFieldToFilter('stitching_service', array('like' => '%'.$_REQUEST['stitching_type'].'%'))
+											->addFieldToFilter('status',1);
+?>
+<div class="add_measure_details">
+	<div class="add_measure_detail" id="add_style_fit">
+		<input type="hidden" class="lehanga_size" value="<?php echo sizeof($lehangacollection); ?>">
+		<input type="hidden" class="salwar_size" value="<?php echo sizeof($salwarcollection); ?>">
+		<input type="hidden" class="tassel_size" value="<?php echo sizeof($tasselcollection); ?>">
+		<div class="label_title"><label>1. Style & Fit</label><label class="right"></label></div>
+		<div class="add_style_fit_details" id="add_measurement_step">
+			<div class="front">
+				<?php if( sizeof($frontcollection) > 0 ) { ?>
+					<div class="label_title1"><label>Front Styles</label></div>
+					<div class="add_front_style_details" id="style_details">
+						<ul class="front_style" id="item_style20">
+							<?php $i = 0; foreach ($frontcollection as $key => $_front) { ?>
+								<li class="front_style_li" data="<?php echo $i; ?>">
+									<div class="title"><label><?php echo $_front->getTitle(); ?></label></div>
+									<div class="image"><img width="130" height="180" alt="<?php echo $_front->getTitle(); ?>" src="<?php echo Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA).$_front->getImage(); ?>"></div>
+									<div class="select_option"><input id="<?php echo $value; ?>" class="front_id" name="front_id" type="radio" value="<?php echo $_front->getStyleId(); ?>" /></div>
+								</li>
+							<?php $i++; } ?>
+						</ul>
+					</div>
+				<?php } ?>
+			</div>
+			<div class="clearer"></div>
+			<div class="back"></div>
+			<div class="clearer"></div>
+			<div class="sleeve"></div>
+			<div class="clearer"></div>
+			<div class="lehanga">
+				<?php if( sizeof($lehangacollection) > 0 && sizeof($frontcollection) == 0) { ?>
+					<div class="label_title1"><label>Lehanga/Skirt/Petticoat Styles</label></div>
+					<div class="sleeve_style_details" id="style_details">
+						<ul class="back_style" id="item_style21">
+							<?php $i = 0; foreach ($lehangacollection as $key => $_lehanga) { ?>
+								<li class="lehanga_style_li" data="<?php echo $i; ?>">
+								<div class="title"><label><?php echo $_lehanga->getTitle(); ?></label></div>
+								<div class="image"><img width="130" height="180" alt="<?php echo $_lehanga->getTitle(); ?>" src="<?php echo Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA).$_lehanga->getImage(); ?>"></div>
+								<div class="select_option"><input id="<?php echo $_REQUEST['service']; ?>" class="lehanga_id" name="lehanga_id" type="radio" value="<?php echo $_lehanga->getLehangaId(); ?>" /></div>
+								</li>
+							<?php $i++; } ?>
+						</ul>
+					</div>
+				<?php } ?>
+			</div>
+			<div class="clearer"></div>
+			<div class="salwar"></div>
+			<div class="clearer"></div>
+			<div class="tassel"></div>
+			<div class="clearer"></div>
+		</div>
+	</div>
+	<div class="clearer"></div>
+	<div class="add_measure_detail" id="add_measurement">
+		<div class="label_title"><label>2. Measurements</label><label class="right"></label></div>
+		<div class="add_measurement_details" id="add_measurement_step">
+			<div class="add_measuring_units"></div>
+	            <div class="measurement_attributes">
+	                <div class="custom_measurements"></div>
+	            </div>
+	        </div>
+		</div>
+	</div>
+
+
+	<script type="text/javascript">
+	    var jQuery = jQuery.noConflict();
+	    jQuery(function(){
+	    	jQuery("#item_style20").flexisel();
+	    	jQuery("#item_style21").flexisel();
+	        jQuery('.label_title').click(function() {
+	        	jQuery(this).parent().parent().find('#add_measurement_step').show();
+			});
+			var lehanga_size = parseInt(jQuery('.lehanga_size').val());
+			var salwar_size = parseInt(jQuery('.salwar_size').val());
+			var tassel_size = parseInt(jQuery('.tassel_size').val());
+			var service = parseInt(jQuery('select.add_avail_stitching_services').val());
+			var stitching_type = parseInt(jQuery('select.add_stitching_services_types').val());
+	        jQuery('.front_id').click(function() {
+	            var data1 = "&front_id="+this.value+"&service="+service+"&service_type="+stitching_type;
+	            var url1 = '<?php echo Mage::getBaseUrl(); ?>measurement/stored/getbackstyles';
+				try {
+					jQuery.ajax({
+						url: url1,
+						type : 'post',
+						data: data1,
+						success: function(response){
+							if (response) {
+								var string = response;
+							} else{
+								var string = '<div class="back"><div class="label_title1"><label>Back Styles</label></div><div class="back_style_details" id="style_details"><p>Currently the Back Styles are Unavailable for this product</p></div></div>';
+							}
+							jQuery('.back').replaceWith(string);
+						}
+					});
+				} catch(e){ }
+	        });
+	        jQuery('.lehanga_id').click(function() {
+				var data1 = "&lehanga_id="+this.value+"&service="+jQuery('select.add_avail_stitching_services').val()+"&service_type="+jQuery('select.add_stitching_services_types').val();
+				if(salwar_size > 0){
+					var url1 = '<?php echo Mage::getBaseUrl(); ?>measurement/stored/getsalwarstyles';
+		            try {
+						jQuery.ajax({
+							url: url1,
+							type : 'post',
+							data: data1,
+							success: function(response){
+								if (response) {
+									var string = response;
+								} else{
+									var string = '<div class="salwar"><div class="label_title1"><label>Salwar Styles</label></div><div class="salwar_style_details" id="style_details"><p>Currently the Salwar Styles are Unavailable for this product</p></div></div>';
+								}
+								jQuery('.salwar').replaceWith(string);
+							}
+						});
+					} catch(e){ }
+				} else if(tassel_size > 0){
+					var url1 = '<?php echo Mage::getBaseUrl(); ?>measurement/stored/gettasselstyles';
+		            try {
+						jQuery.ajax({
+							url: url1,
+							type : 'post',
+							data: data1,
+							success: function(response){
+								if (response) {
+									var string = response;
+								} else{
+									var string = '<div class="tassel"><div class="label_title1"><label>Tassel Styles</label></div><div class="tassel_style_details" id="style_details"><p>Currently the Tassel Styles are Unavailable for this product</p></div></div>';
+								}
+								jQuery('.tassel').replaceWith(string);
+							}
+						});
+					} catch(e){ }
+				} else{
+			        var url1 = '<?php echo Mage::getBaseUrl(); ?>measurement/stored/units';
+					try {
+						jQuery.ajax({
+							url: url1,
+							type : 'post',
+							data: data1,
+							success: function(response){
+								if (response) {
+									var string = response;
+								} else{
+									var string = '<div class="add_measuring_units"></div>';
+								}
+								jQuery('.add_measuring_units').replaceWith(string);
+							}
+						});
+					} catch(e){ }
+				}
+			});
+
+	        jQuery('.take_measurement').click(function() {
+	        	if (jQuery(this).parents('.measure_detail').attr('id') == 'style_fit') {
+	        		var front_id = 0;
+		        	var back_id = 0;
+		        	var sleeve_id = 0;
+			    	jQuery(".front_id").each(function() {
+						if( jQuery(this).prop("checked")== true) {
+							front_id = jQuery(this).attr("value");
+						}
+					});
+			    	jQuery(".back_id").each(function() {
+						if( jQuery(this).prop("checked")== true) {
+							back_id = jQuery(this).attr("value");
+						}
+					});
+			    	jQuery(".sleeve_id").each(function() {
+						if( jQuery(this).prop("checked")== true) {
+							sleeve_id = jQuery(this).attr("value");
+						}
+					});
+					var data1 = "&front_id="+front_id+"&back_id="+back_id+"&sleeve_id="+sleeve_id+"&service="+jQuery('.service').val();
+		            var url1 = '<?php echo Mage::getBaseUrl(); ?>measurement/measure/getmeasurements';
+		            try {
+						jQuery.ajax({
+							url: url1,
+							type : 'post',
+							data: data1,
+							success: function(response){
+								if (response) {
+									var string = response;
+								} else{
+									var string = '<div id="measurement_step" class="measurement_details"><p>Currently the Measurements are Unavailable for this product</p></div>';
+								}
+								jQuery('.style_fit_details').toggle();
+								jQuery('.measurement_details').replaceWith(string);
+								// jQuery('.measurement_details').toggle();
+							}
+						});
+					} catch(e){ }
+	        	} else if(jQuery(this).parents('.measure_detail').attr('id') == 'measurement'){
+	        		alert('measurement');
+	        	} else if(jQuery(this).parents('.measure_detail').attr('id') == 'review'){
+	        		alert('review');
+	        	}
+			});
+	    });
+	</script>
+</div>

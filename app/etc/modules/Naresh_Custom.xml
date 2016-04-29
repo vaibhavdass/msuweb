@@ -1,0 +1,19 @@
+<config>
+    <modules>
+        <Naresh_Custom>
+            <active>true</active>
+            <codePool>local</codePool>
+        </Naresh_Custom>
+    </modules>
+    <frontend>
+        <routers>
+            <custom>
+                <use>standard</use>
+                <args>
+                    <module>Naresh_Custom</module>
+                    <frontName>custom</frontName>
+                </args>
+            </custom>
+        </routers>  
+    </frontend>
+</config>

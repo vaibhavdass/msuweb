@@ -1,0 +1,178 @@
+<div id="measurement_step" class="measurement_review">
+<?php $data = $_REQUEST[$_REQUEST['service']];
+foreach ($data as $key => $value2) {
+	$a = explode("'", $key);
+	if(strcmp($a[1], 'measurement_type') == 0){
+		$measurement_type = $value2;
+		break;
+	}
+}
+
+	echo '<div class=review_selected_style><ul class=ul_review_selected_style>';
+	foreach ($data as $key => $value1) {
+		$a = explode("'", $key);
+		if ($a[1] == 'front_id') {
+			$front = Mage::getModel('styles/styles')->getCollection()->addFieldToSelect('*')->addFieldToFilter('style_id',$value1)->addFieldToFilter('status',1)->getFirstItem(); ?>
+			<li class=li_review_selected_style>
+				<div class="selected_style_image"><img width=200 height=300 alt="<?php echo $front->getTitle(); ?>" src="<?php echo Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA).$front->getImage(); ?>"></div>
+				<?php if ($measurement_type != 'simple') { ?>
+					<div class="selected_style_measurements">
+						<?php $front_smeasurements = explode(',', $front->getMeasurementAttr());
+						foreach ($front_smeasurements as $value) {
+							$measurement = Mage::getModel('measurement/measurement')->getCollection()->addFieldToSelect('*')->addFieldToFilter('measurement_id',$value)->addFieldToFilter('status',1)->getFirstItem(); ?>
+							<div class="review_your_measurements1">
+								<label class="label"><b><?php echo $measurement->getTitle().' : '; ?></b></label>
+								<?php foreach ($data as $key => $value11) {
+									$a = explode("'", $key);
+									if($a[1] == $value){
+										$final_value = $value11;
+										if($measurement->getDropdownType() == 'custom'){
+											$customtitles = Mage::getModel('measurement/customtitles')->load($value11);
+											$final_value = $customtitles->getTitle();
+										}
+										break;
+									}
+								} ?>
+								<label class="value"><?php echo $final_value; ?></label>
+							</div>
+						<?php } ?>
+					</div>
+				<?php } ?>
+			</li>
+			<?php 
+		} elseif ($a[1] == 'back_id') {
+			$back = Mage::getModel('back/back')->getCollection()->addFieldToSelect('*')->addFieldToFilter('back_id',$value1)->addFieldToFilter('status',1)->getFirstItem(); ?>
+			<li class=li_review_selected_style>
+				<div class="selected_style_image"><img width=200 height=300 alt="<?php echo $back->getTitle(); ?>" src="<?php echo Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA).$back->getImage(); ?>"></div>
+				<?php if ($measurement_type != 'simple') { ?>
+					<div class="selected_style_measurements">
+						<?php $back_smeasurements = explode(',', $back->getMeasurementAttr());
+						foreach ($back_smeasurements as $value) {
+							$measurement = Mage::getModel('measurement/measurement')->getCollection()->addFieldToSelect('title')->addFieldToFilter('measurement_id',$value)->addFieldToFilter('status',1)->getFirstItem(); ?>
+							<div class="review_your_measurements1">
+								<label class="label"><b><?php echo $measurement->getTitle().' : '; ?></b></label>
+								<?php foreach ($data as $key => $value11) {
+									$a = explode("'", $key);
+									if($a[1] == $value){
+										$final_value = $value11;
+										if($measurement->getDropdownType() == 'custom'){
+											$customtitles = Mage::getModel('measurement/customtitles')->load($value11);
+											$final_value = $customtitles->getTitle();
+										}
+										break;
+									}
+								} ?>
+								<label class="value"><?php echo $final_value; ?></label>
+							</div>
+						<?php } ?>
+					</div>
+				<?php } ?>
+			</li>
+		<?php } elseif ($a[1] == 'sleeve_id') {
+			$sleeve = Mage::getModel('sleeves/sleeves')->getCollection()->addFieldToSelect('*')->addFieldToFilter('sleeves_id',$value1)->addFieldToFilter('status',1)->getFirstItem(); ?>
+			<li class=li_review_selected_style>
+				<div class="selected_style_image"><img width=200 height=300 alt="<?php echo $sleeve->getTitle(); ?>" src="<?php echo Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA).$sleeve->getImage(); ?>"></div>
+				<?php if ($measurement_type != 'simple') { ?>
+					<div class="selected_style_measurements">
+						<?php $sleeve_smeasurements = explode(',', $sleeve->getMeasurementAttr());
+						foreach ($sleeve_smeasurements as $value) {
+							$measurement = Mage::getModel('measurement/measurement')->getCollection()->addFieldToSelect('title')->addFieldToFilter('measurement_id',$value)->addFieldToFilter('status',1)->getFirstItem(); ?>
+							<div class="review_your_measurements1">
+								<label class="label"><b><?php echo $measurement->getTitle().' : '; ?></b></label>
+								<?php foreach ($data as $key => $value11) {
+									$a = explode("'", $key);
+									if($a[1] == $value){
+										$final_value = $value11;
+										if($measurement->getDropdownType() == 'custom'){
+											$customtitles = Mage::getModel('measurement/customtitles')->load($value11);
+											$final_value = $customtitles->getTitle();
+										}
+										break;
+									}
+								} ?>
+								<label class="value"><?php echo $final_value; ?></label>
+							</div>
+						<?php } ?>
+					</div>
+				<?php } ?>
+			</li>
+		<?php }
+	}
+	echo '</ul></div>';
+	$key = array_search($data['measurement_type'], $data);
+	$i = 0;
+	// print_r($data);
+	echo $data['28'];
+	foreach ($data as $key => $value) {
+		if ($i > 4) {
+			$a = explode("'", $key);
+			$measurement = Mage::getModel('measurement/measurement')->getCollection()->addFieldToSelect('title')->addFieldToFilter('measurement_id',$a[1])->addFieldToFilter('status',1)->getFirstItem(); ?>
+			<!-- <div class="review_your_measurements">
+				<label class="label"><b><?php echo $measurement->getTitle().' : '; ?></b></label>
+				<label class="value"><?php echo $value; ?></label>
+			</div> -->
+		<?php }
+		$i++;
+	}
+?>
+<!-- <div><input class="submit_measurements" type="submit" value="Submit" /></div> -->
+<div class="goto_nextstep" style="display: block;"><button id="submit_measurements" class="take_measurement" type="submit">Next Step</button></div>
+<script type="text/javascript">
+    var jQuery = jQuery.noConflict();
+    jQuery(function(){
+    	function getDoc(frame) {
+			var doc = null;
+			try {
+				if (frame.contentWindow) {
+					doc = frame.contentWindow.document;
+				}
+			} catch(err) { }
+			if (doc) {
+				return doc;
+			}
+			try {
+				doc = frame.contentDocument ? frame.contentDocument : frame.document;
+			} catch(err) {
+				doc = frame.document;
+			}
+			return doc;
+		}
+		jQuery("#measurement").submit(function(e) {
+			var formObj = jQuery(this);
+			var url1 = '<?php echo Mage::getBaseUrl(); ?>measurement/measure/savemeasurements';
+			if(window.FormData !== undefined) {
+				var formData = new FormData(this);
+				jQuery.ajax({
+					url: url1,
+					type: 'POST',
+					data:  formData,
+					mimeType:"multipart/form-data",
+					contentType: false,
+					cache: false,
+					processData:false,
+					success: function(response){
+						if (response) {
+							alert('Hi');
+							window.location.reload()
+							// jQuery('.measurement_review').replaceWith(response);
+						}
+					}
+				});
+				e.preventDefault();
+				// e.unbind();
+			} else {
+				var  iframeId = 'unique' + (new Date().getTime());
+				var iframe = jQuery('<iframe src="javascript:false;" name="'+iframeId+'" />');
+				iframe.hide();
+				formObj.attr('target',iframeId);
+				iframe.appendTo('body');
+				iframe.load(function(e) {
+					var doc = getDoc(iframe[0]);
+					var docRoot = doc.body ? doc.body : doc.documentElement;
+					var data = docRoot.innerHTML;
+				});
+			}     
+		});
+    });
+</script>
+</div>

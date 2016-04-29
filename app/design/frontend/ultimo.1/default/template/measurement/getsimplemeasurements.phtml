@@ -1,0 +1,55 @@
+<div class="simple_measurements"><p>Send your own sample garment for measurements by courier to M/s Mysore Saree Udyog LLP. 1st floor 294 K Kamaraj road Bangalore - 560042 India</p>
+<script type="text/javascript">
+var jQuery = jQuery.noConflict();
+jQuery(function(){
+	jQuery('.take_measurement').click(function() {
+    	jQuery('.loading').toggle();
+    	if (jQuery(this).parents('.measure_detail').attr('id') == 'style_fit') {
+    		var front_id = 0;
+        	var back_id = 0;
+        	var sleeve_id = 0;
+	    	jQuery(".front_id").each(function() {
+				if( jQuery(this).prop("checked")== true) {
+					front_id = jQuery(this).attr("value");
+				}
+			});
+	    	jQuery(".back_id").each(function() {
+				if( jQuery(this).prop("checked")== true) {
+					back_id = jQuery(this).attr("value");
+				}
+			});
+	    	jQuery(".sleeve_id").each(function() {
+				if( jQuery(this).prop("checked")== true) {
+					sleeve_id = jQuery(this).attr("value");
+				}
+			});
+			var data1 = "&front_id="+front_id+"&back_id="+back_id+"&sleeve_id="+sleeve_id+"&service="+jQuery('.service').val();
+            var url1 = '<?php echo Mage::getBaseUrl(); ?>measurement/measure/getmeasurements';
+            try {
+				jQuery.ajax({
+					url: url1,
+					type : 'post',
+					data: data1,
+					success: function(response){
+						if (response) {
+							var string = response;
+						} else{
+							var string = '<div id="measurement_step" class="measurement_details"><p>Currently the Measurements are Unavailable for this product</p></div>';
+						}
+						jQuery('.measurement_details').replaceWith(string);
+						// jQuery('.measurement_details').toggle();
+					}
+				});
+			} catch(e){ }
+			jQuery(this).parents('#measurement_step').hide();
+    	} else if(jQuery(this).parents('.measure_detail').attr('id') == 'measurement'){
+    		jQuery(this).parents('#measurement_step').hide();
+    	} else if(jQuery(this).parents('.measure_detail').attr('id') == 'review'){
+    		jQuery(this).parents('#measurement_step').hide();
+    		alert('review');
+    	}
+		jQuery('.loading').toggle();
+	});
+});
+</script>
+</div>

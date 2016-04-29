@@ -1,0 +1,50 @@
+<div class="standard_measurements">
+	<div class="desktop">
+		<?php
+			$service = $_REQUEST['service'];
+			$row = 1;
+			if (($handle = fopen("C://xampp/htdocs/mymsu/media/Standard.csv", "r")) !== FALSE) {
+				echo '<table>';
+			    while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
+			        $num = count($data);
+			        if ( ($data[2] == $service) || ($data[2] == 'TYPE') ) {
+			        	$row++;
+			        	echo '<tr>';
+				        for ($c=0; $c < $num; $c++) {
+				        	if ($row == 2) {
+				        		if ($c == 2 ) {
+				        			continue;
+				        		}
+				        		if ($c == 0 ) {
+				        			echo '<th></th>';
+				        		}else{
+				        			echo '<th>'.$data[$c] .'</th>';
+				        		}
+				        	}else{
+				        		if ($c == 2) {
+				        			continue;
+				        		}
+				        		if ($c == 0) {
+				        			echo '<td><input name="'.$service.'" type="radio" value="'.$data[$c].'" /></td>';
+				        		}else{
+				        			if ($c > 2) {
+				        				if($_REQUEST['units'] == 'cm'){
+				        					echo '<td>'.$data[$c]*2.54 .'</td>';
+				        				}else {
+				        					echo '<td>'.$data[$c] .'</td>';	
+				        				}
+				        			}else{
+				        				echo '<td>'.$data[$c] .'</td>';
+				        			}
+				        		}
+				        	}
+				        }
+				        echo '</tr>';
+			        }
+			    }
+			    echo '</table>';
+			    fclose($handle);
+			}
+		?>
+	</div>
+</div>

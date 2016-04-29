@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<layout version="0.1.0">
+    <sleeves_adminhtml_sleeves_index>
+        <reference name="content">
+            <block type="sleeves/adminhtml_sleeves" name="sleeves" />
+        </reference>
+    </sleeves_adminhtml_sleeves_index>
+</layout>

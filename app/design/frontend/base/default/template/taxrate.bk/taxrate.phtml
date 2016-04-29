@@ -1,0 +1,12 @@
+<div class="custom_duties_tax">
+	<?php $countrycode = $_REQUEST['country_code'];
+		$quote = Mage::getModel('checkout/session')->getQuote();
+		$quoteData = $quote->getData();
+		$price = $quoteData['grand_total'];
+		$data = Mage::getSingleton('taxrate/taxrate')->getCollection()->addFieldToFilter('status',1)->addAttributeToFilter('cat_id', array(array('like' => '% '.$countrycode.' %')))->getFirstItem();
+		$gst_perc = ($price/100)*$data[0]['gst_perc'];  // GST Percentage Value
+		$tax_default_perc = ($price/100)*$data[0]['tax_default_perc'];
+		$Total_Custom_Duties_and_Taxes = $gst_perc + $data[0]['handling_fee'] + $tax_default_perc;
+		print_r($Total_Custom_Duties_and_Taxes);
+	?>
+</div>

@@ -1,0 +1,368 @@
+<?php
+/**
+ * Apptha
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the EULA
+ * that is bundled with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://www.apptha.com/LICENSE.txt
+ *
+ * ==============================================================
+ *                 MAGENTO EDITION USAGE NOTICE
+ * ==============================================================
+ * This package designed for Magento COMMUNITY edition
+ * Apptha does not guarantee correct work of this extension
+ * on any other Magento edition except Magento COMMUNITY edition.
+ * Apptha does not provide extension support in case of
+ * incorrect edition usage.
+ * ==============================================================
+ *
+ * @category    Apptha
+ * @package     Apptha_Sociallogin
+ * @version     0.1.8
+ * @author      Apptha Team <developers@contus.in>
+ * @copyright   Copyright (c) 2014 Apptha. (http://www.apptha.com)
+ * @license     http://www.apptha.com/LICENSE.txt
+ *
+ * */
+
+
+/**
+ * Social Login Login / Account Create Controller
+ *
+ * In this class contains the login and create account and  forget password operations.
+ * Also it will connects social networks such as Google, Twitter, Yahoo and Facebook oAuth connections.
+ *
+ */
+
+class Apptha_Sociallogin_IndexController extends Mage_Core_Controller_Front_Action {
+
+	/**
+	 * Render Apptha sociallogin pop-up layout
+	 *
+	 * @return void
+	 */
+	public function indexAction() {
+		$this->loadLayout();
+		$this->renderLayout();
+	}
+
+	/**
+	 * Customer Register Action
+	 *
+	 * @param string $firstname
+	 * @param string $lastname
+	 * @param string $email
+	 * @param string $provider
+	 *
+	 * @return string
+	 */
+	public function customerAction($firstname, $lastname, $email, $provider) {
+
+		/**
+		 * Get Customer Model
+		 *
+		 * @return Mage_Customer_Model_Customer
+		 */
+		$customer = Mage::getModel('customer/customer');
+		$collection = $customer->getCollection();
+		if ($customer->getSharingConfig()->isWebsiteScope()) {
+			$collection->addAttributeToFilter('website_id', Mage::app()->getWebsite()->getId());
+		}
+		if ($this->_getCustomerSession()->isLoggedIn()) {
+			$collection->addFieldToFilter('entity_id', array('neq' => $this->_getCustomerSession()->getCustomerId()));
+		}
+
+		/**
+		 * Retrieves the customer details depends on  @var email
+		 */
+		$customer->setWebsiteId(Mage::app()->getStore()->getWebsiteId())
+		->loadByEmail($email);
+		$customer_id_by_email = $customer->getId();
+
+		if ($customer_id_by_email == '') {
+			$standardInfo['email'] = $email;
+		} else {
+			$standardInfo['email'] = $email;
+		}
+
+		/**
+		 * Retrieving the customer form posted values. @param array $standardInfo
+		 *
+		 * array values such as	@first_name,@last_name and @email
+		 */
+		$standardInfo['first_name'] = $firstname;
+		$standardInfo['last_name'] = $lastname;
+
+		$customer->setWebsiteId(Mage::app()->getStore()->getWebsiteId())
+		->loadByEmail($standardInfo['email']);
+
+		/**
+		 * Check if Already registered customer.
+		 */
+		if ($customer->getId()) {
+
+			/**
+			 * Initiates the customer account session and logged into the site
+			 */
+			$this->_getCustomerSession()->setCustomerAsLoggedIn($customer);
+			$this->_getCustomerSession()->addSuccess($this->__('Your account has been successfully connected through' . ' ' . $provider));
+
+			/**
+			 * Get customer current URL from customer session.
+			 *
+			 * @return string $link
+			 */
+			$link = Mage::getSingleton('customer/session')->getLink();
+
+			/**
+			 * If customer session link is empty, set the request path URL
+			 *
+			 * @return string $requestpath
+			 *
+			 */
+			if (!empty($link)) {
+				$requestPath = trim($link, '/');
+			}
+
+			/**
+			 * Check if customer current URL is checkout URL for redirecting purpose.
+			 */
+			if ($requestPath == 'checkout/onestep') {
+				$this->_redirect($requestPath);
+				return;
+			} else {
+				$enable_redirect_status = Mage::getStoreConfig('sociallogin/general/enable_redirect');
+
+				if ($enable_redirect_status) {
+					$redirect = $this->_loginPostRedirect();
+				} else {
+					$redirect = Mage::getSingleton('core/session')->getReLink();
+				}
+
+				$this->_redirectUrl($redirect);
+				return;
+			}
+		}
+
+		/**
+		 * Generate Random Password .
+		 *
+		 * @return string $randomPassword
+		 */
+		$randomPassword = $customer->generatePassword(8);
+
+		/**
+		 * Set the customer attributes into the customer collection for register the customer.
+		 * Also sets the user used login provider like FB,Google,Twiter and Yahoo.
+		 */
+		$customer->setId(null)
+		->setSkipConfirmationIfEmail($standardInfo['email'])
+		->setFirstname($standardInfo['first_name'])
+		->setLastname($standardInfo['last_name'])
+		->setEmail($standardInfo['email'])
+		->setPassword($randomPassword)
+		->setConfirmation($randomPassword)
+		->setLoginProvider($provider);
+
+		/**
+		 * We manually set the newsletter subscription set as 1.
+		 *
+		 */
+		if ($this->getRequest()->getParam('is_subscribed', false)) {
+			$customer->setIsSubscribed(1);
+		}
+
+		/**
+		 * Validate customer data and return errors if they are
+		 *
+		 * @param Mage_Customer_Model_Customer $validationCustomer
+		 * @return array|string
+		 */
+		$errors = array();
+		$validationCustomer = $customer->validate();
+		if (is_array($validationCustomer)) {
+			$errors = array_merge($validationCustomer, $errors);
+		}
+		$validationResult = true;
+
+		/**
+		 * If validated customer data is true then save the customer data into the Mage_Customer_Model_Customer $customer
+		 */
+		if (true === $validationResult) {
+
+			$customer->save();
+
+			$this->_getCustomerSession()->addSuccess(
+			$this->__('Thank you for registering with %s', Mage::app()->getStore()->getFrontendName()) .
+                    '. ' .
+			$this->__('You will receive welcome email with registration info in a moment.')
+			);
+
+			/**
+			 * Send Account Notification success mail
+			 */
+			$customer->sendNewAccountEmail();
+
+			/**
+			 * Set the cutomer login session
+			 */
+			$this->_getCustomerSession()->setCustomerAsLoggedIn($customer);
+
+			/**
+			 * Get customer current URL from customer session.
+			 *
+			 * @return string $link
+			 */
+			$link = Mage::getSingleton('customer/session')->getLink();
+
+			/**
+			 * If customer session link is empty, set the request path URL
+			 *
+			 * @return string $requestpath
+			 *
+			 */
+			if (!empty($link)) {
+
+				$requestPath = trim($link, '/');
+			}
+
+			/**
+			 * Check if customer current URL is checkout URL for redirecting purpose.
+			 */
+			if ($requestPath == 'checkout/onestep') {
+				$this->_redirect($requestPath);
+				return;
+			} else {
+				$enable_redirect_status = Mage::getStoreConfig('sociallogin/general/enable_redirect');
+				if ($enable_redirect_status) {
+					$redirect = $this->_loginPostRedirect();
+				} else {
+					$redirect = Mage::getSingleton('core/session')->getReLink();
+				}
+				$this->_redirectUrl($redirect);
+				return;
+			}
+
+			/**
+			 * If doesn't set form data it will redirects to Registration page
+			 */
+		} else {
+			$this->_getCustomerSession()->setCustomerFormData($customer->getData());
+			$this->_getCustomerSession()->addError($this->__('User profile can\'t provide all required info, please register and then connect with Apptha Social login.'));
+			if (is_array($errors)) {
+				foreach ($errors as $errorMessage) {
+					$this->_getCustomerSession()->addError($errorMessage);
+				}
+			}
+			$this->_redirect('customer/account/create');
+			return;
+		}
+	}
+
+	/**
+	 * Retrieve customer session model object
+	 *
+	 * @return Mage_Customer_Model_Session
+	 */
+	private function _getCustomerSession() {
+		return Mage::getSingleton('customer/session');
+	}
+
+	/**
+	 * Redirect customer dashboard URL after logging in
+	 *
+	 * @return string URL
+	 */
+	protected function _loginPostRedirect() {
+		$session = $this->_getCustomerSession();
+
+		if (!$session->getBeforeAuthUrl() || $session->getBeforeAuthUrl() == Mage::getBaseUrl()) {
+
+			/**
+			 * Set Default Account URL to customer session @var BeforeAuthUrl
+			 */
+			$session->setBeforeAuthUrl(Mage::helper('customer')->getAccountUrl());
+
+			/**
+			 * Redirect customer to the last page visited after logging in
+			 */
+			if ($session->isLoggedIn()) {
+				if (!Mage::getStoreConfigFlag('customer/startup/redirect_dashboard')) {
+					if ($referer = $this->getRequest()->getParam(Mage_Customer_Helper_Data::REFERER_QUERY_PARAM_NAME)) {
+						$referer = Mage::helper('core')->urlDecode($referer);
+						if ($this->_isUrlInternal($referer)) {
+							$session->setBeforeAuthUrl($referer);
+						}
+					}
+				} else if ($session->getAfterAuthUrl()) {
+					$session->setBeforeAuthUrl($session->getAfterAuthUrl(true));
+				}
+			} else {
+				$session->setBeforeAuthUrl(Mage::helper('customer')->getLoginUrl());
+			}
+		} else if ($session->getBeforeAuthUrl() == Mage::helper('customer')->getLogoutUrl()) {
+			$session->setBeforeAuthUrl(Mage::helper('customer')->getDashboardUrl());
+		} else {
+			if (!$session->getAfterAuthUrl()) {
+				$session->setAfterAuthUrl($session->getBeforeAuthUrl());
+			}
+			if ($session->isLoggedIn()) {
+				$session->setBeforeAuthUrl($session->getAfterAuthUrl(true));
+			}
+		}
+
+		return $session->getBeforeAuthUrl(true);
+	}
+
+	/**
+	 * @Twitter login action
+	 *
+	 */
+	public function twitterloginAction() {
+
+		/**
+		 * Include Twitter files for oAuth connection
+		 */
+		require 'sociallogin/twitter/twitteroauth.php';
+		require 'sociallogin/config/twconfig.php';
+
+		/**
+		 * Retrives @Twitter consumer key and secret key from core session
+		 */
+		$tw_oauth_token = Mage::getSingleton('customer/session')->getTwToken();
+		$tw_oauth_token_secret = Mage::getSingleton('customer/session')->getTwSecret();
+		$twitteroauth = new TwitterOAuth(YOUR_CONSUMER_KEY, YOUR_CONSUMER_SECRET, $tw_oauth_token, $tw_oauth_token_secret);
+
+		/**
+		 * Get Accesss token from @Twitter oAuth
+		 */
+		$oauth_verifier = $this->getRequest()->getParam('oauth_verifier');
+		$access_token = $twitteroauth->getAccessToken($oauth_verifier);
+
+		/**
+		 * Get @Twitter User Details from twitter account
+		 *
+		 * @return string Redirect URL or Customer save action
+		 */
+		$user_info = $twitteroauth->get('account/verify_credentials');
+
+		/**
+		 * Retrieve the user details into twitter profile info. @var $user_info array
+		 *
+		 * If @user_info contains error means throws the error message.
+		 */
+		if (isset($user_info->error)) {
+			Mage::getSingleton('customer/session')->addError($this->__('Twitter Login connection failed'));
+			$url = Mage::helper('customer')->getAccountUrl();
+			return $this->_redirectUrl($url);
+		} else {
+
+			/**
+			 * Retrieve the user details into twitter profile info. @var $user_info array
+			 *
+			 */
+			$firstname = $user_info->name;
+			$twitte

@@ -1,0 +1,9 @@
+<select class="required-entry select" name="stitching_type" id="stitching_type">
+	<?php $collection = Mage::getModel('stitchingservices/stitchingservices')->getCollection()->addFieldToFilter('stitching_service_id',$_REQUEST['service'])->addFieldToFilter('status',1)->addFieldToFilter('stitching_service_price', array('gt' => '0.00'));
+	echo '<option>--- Select Option ---</option>';
+	if (sizeof($collection) > 0) {
+		foreach ($collection as $key => $value) {
+			echo '<option value="'.$value->getStitchingservicesId().'">'.$value->getTitle().' - Rs '.$value->getStitchingServicePrice().'</option>';
+		}
+	} ?>
+</select>

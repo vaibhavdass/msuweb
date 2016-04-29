@@ -1,0 +1,5 @@
+<?php if (Mage::getSingleton('cms/block')->load('collection'.$_REQUEST['page'])->getIsActive()) {
+	echo $this->getLayout()->createBlock('cms/block')->setBlockId('collection'.$_REQUEST['page'])->toHtml();
+} else{
+	return false;
+} ?>

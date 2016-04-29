@@ -1,0 +1,236 @@
+<?php
+    $url= $_SERVER['REQUEST_URI'];
+    $urlarr=explode('/id/',$url);
+    $myid= explode('/',$urlarr[1]);
+    $attrid = $myid[0];
+    if(!empty($attrid)){
+    	$collection = Mage::getSingleton('mycategory/mycategory')->getCollection()->addFieldToFilter('mycategory_id',$attrid)->getFirstItem();
+    }
+
+    $rootcategories = Mage::getSingleton('catalog/category')->getCategories(Mage::getSingleton('core/store')->load(Mage_Core_Model_App::DISTRO_STORE_ID)->getRootCategoryId());
+	$attributes = Mage::getSingleton('catalog/product')->getAttributes();
+	$attributeArray = array();
+	foreach($attributes as $a){
+		foreach ($a->getEntityType()->getAttributeCodes() as $attributeName) {
+			$attribute_details = Mage::getSingleton("eav/config")->getAttribute('catalog_product', $attributeName);
+			if(($attribute_details->getIsUserDefined() == 1) && ($attribute_details->getFrontendInput() == 'multiselect' || $attribute_details->getFrontendInput() == 'select')){
+				$attributeArray[] = array(
+										'title' => $attributeName,
+										'label' => $attribute_details->getFrontendLabel()
+				);
+			}
+		}
+		break;
+	}
+?>
+<table class="form-list" cellspacing="0">
+	<tr>
+		<td class="label"><label for="<?php echo $this->getElement()->getName() ?>"><?php echo 'Category' ?> <span class="required">*</span></label></td>
+		<td class="value">
+	        <select class="required-entry select" name="category" id="category">
+	        	<option>--- Please Select ---</option>
+	        	<?php foreach($rootcategories as $category){
+					echo "<option value =".$category->getId()." >".$category->getName()."</option>";
+					$sub1rootcategories = Mage::getSingleton('catalog/category')->getCategories($category->getId());
+					foreach ($sub1rootcategories as $category1) {
+						echo "<option value =".$category1->getId()." > - ".$category1->getName()."</option>";
+						$sub2rootcategories = Mage::getSingleton('catalog/category')->getCategories($category1->getId());
+						foreach ($sub2rootcategories as $category2) {
+							echo "<option value =".$category2->getId()." > - - ".$category2->getName()."</option>";
+							$sub3rootcategories = Mage::getSingleton('catalog/category')->getCategories($category2->getId());
+							foreach ($sub3rootcategories as $category3) {
+								echo "<option value =".$category3->getId()." > - - - ".$category3->getName()."</option>";
+								$sub4rootcategories = Mage::getSingleton('catalog/category')->getCategories($category3->getId());
+								foreach ($sub4rootcategories as $category4) {
+									echo "<option value =".$category4->getId()." > - - - - ".$category4->getName()."</option>";
+									$sub5rootcategories = Mage::getSingleton('catalog/category')->getCategories($category4->getId());
+									foreach ($sub5rootcategories as $category5) {
+										echo "<option value =".$category5->getId()." > - - - - - ".$category5->getName()."</option>";
+										$sub6rootcategories = Mage::getSingleton('catalog/category')->getCategories($category5->getId());
+										foreach ($sub6rootcategories as $category6) {
+											echo "<option value =".$category6->getId()." > - - - - - - ".$category6->getName()."</option>";
+											$sub6rootcategories = Mage::getSingleton('catalog/category')->getCategories($category6->getId());
+											foreach ($sub7rootcategories as $category7) {
+												echo "<option value =".$category7->getId()." > - - - - - - ".$category7->getName()."</option>";
+												$sub8rootcategories = Mage::getSingleton('catalog/category')->getCategories($category7->getId());
+												foreach ($sub8rootcategories as $category8) {
+													echo "<option value =".$category8->getId()." > - - - - - - ".$category8->getName()."</option>";
+													$sub9rootcategories = Mage::getSingleton('catalog/category')->getCategories($category8->getId());
+													foreach ($sub9rootcategories as $category9) {
+														echo "<option value =".$category9->getId()." > - - - - - - ".$category9->getName()."</option>";
+														$sub10rootcategories = Mage::getSingleton('catalog/category')->getCategories($category9->getId());
+														foreach ($sub10rootcategories as $category10) {
+															echo "<option value =".$category10->getId()." > - - - - - - ".$category10->getName()."</option>";
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				} ?>
+	        </select>
+        </td>
+	</tr>
+
+	<tr>
+		<td class="label"><label for="<?php echo $this->getElement()->getName() ?>"><?php echo $this->getElement()->getLabel() ?> <span class="required">*</span></label></td>
+		<td class="value">
+        <select class="required-entry required-entry select" name="attr1" id="attribute" onchange="myFunction(this)">
+        	<option>--- Please Select ---</option>
+        	<?php foreach ($attributeArray as $_attribute) { ?>
+				<option value="<?php echo $_attribute['title']; ?>"><?php echo $_attribute['label']; ?></option>
+			<?php } ?>
+        </select>
+        <p id="note_<?php echo $this->getElement()->getName() ?>" class="note"><span><?php echo $this->getElement()->getNote() ?></span></p>
+            </td>
+	</tr>
+
+	<tr>
+        <td class="label"><label for="attr1_values">Attribute 1 Values <span class="required">*</span></label></td>
+    	<td class="value">
+        	<select multiple="multiple" size="10" class="required-entry required-entry select multiselect" name="attr1_values[]" id="attr1_values">
+        		<option>--- Please Select ---</option>
+			</select>
+			<p id="note_attr1_values" class="note"><span>Selected attribute values will display in frontend</span></p>
+		</td>
+    </tr>
+
+	<tr>
+		<td class="label"><label for="attr2">Product Attribute 2</label></td>
+		<td class="value">
+        <select class="required-entry select" name="attr2" id="attribute" onchange="myFunction(this)">
+        	<option>--- Please Select ---</option>
+        	<?php foreach ($attributeArray as $_attribute) { ?>
+				<option value="<?php echo $_attribute['title']; ?>"><?php echo $_attribute['label']; ?></option>
+			<?php } ?>
+        </select>
+        <p class="note" id="note_attr2"><span>Selected One Attribute</span></p>
+            </td>
+	</tr>
+
+	<tr>
+        <td class="label"><label for="attr2_values">Attribute 2 Values </label></td>
+    	<td class="value">
+        	<select multiple="multiple" size="10" class="select multiselect" name="attr2_values[]" id="attr2_values">
+        		<option>--- Please Select A Value Above ---</option>
+			</select>
+			<p id="note_attr2_values" class="note"><span>Selected attribute values will display in frontend</span></p>
+		</td>
+    </tr>
+
+	<tr>
+		<td class="label"><label for="attr3">Product Attribute 3</label></td>
+		<td class="value">
+        <select class="required-entry select" name="attr3" id="attribute" onchange="myFunction(this)">
+        	<option>--- Please Select ---</option>
+        	<?php foreach ($attributeArray as $_attribute) { ?>
+				<option value="<?php echo $_attribute['title']; ?>"><?php echo $_attribute['label']; ?></option>
+			<?php } ?>
+        </select>
+        <p class="note" id="note_attr3"><span>Selected One Attribute</span></p>
+            </td>
+	</tr>
+
+	<tr>
+        <td class="label"><label for="attr3_values">Attribute 3 Values </label></td>
+    	<td class="value">
+        	<select multiple="multiple" size="10" class="select multiselect" name="attr3_values[]" id="attr3_values">
+        		<option>--- Please Select A Value Above ---</option>
+			</select>
+			<p id="note_attr3_values" class="note"><span>Selected attribute values will display in frontend</span></p>
+		</td>
+    </tr>
+
+	<tr>
+		<td class="label"><label for="attr4">Product Attribute 4</label></td>
+		<td class="value">
+        <select class="required-entry select" name="attr4" id="attribute" onchange="myFunction(this)">
+        	<option>--- Please Select ---</option>
+        	<?php foreach ($attributeArray as $_attribute) { ?>
+				<option value="<?php echo $_attribute['title']; ?>"><?php echo $_attribute['label']; ?></option>
+			<?php } ?>
+        </select>
+        <p class="note" id="note_attr4"><span>Selected One Attribute</span></p>
+            </td>
+	</tr>
+
+	<tr>
+        <td class="label"><label for="attr4_values">Attribute 4 Values </label></td>
+    	<td class="value">
+        	<select multiple="multiple" size="10" class="select multiselect" name="attr4_values[]" id="attr4_values">
+        		<option>--- Please Select A Value Above ---</option>
+			</select>
+			<p id="note_attr4_values" class="note"><span>Selected attribute values will display in frontend</span></p>
+		</td>
+    </tr>
+
+	<tr>
+		<td class="label"><label for="attr5">Product Attribute 5</label></td>
+		<td class="value">
+        <select class="required-entry select" name="attr5" id="attribute" onchange="myFunction(this)">
+        	<option>--- Please Select ---</option>
+        	<?php foreach ($attributeArray as $_attribute) { ?>
+				<option value="<?php echo $_attribute['title']; ?>"><?php echo $_attribute['label']; ?></option>
+			<?php } ?>
+        </select>
+        <p class="note" id="note_attr5"><span>Selected One Attribute</span></p>
+            </td>
+	</tr>
+
+	<tr>
+        <td class="label"><label for="attr5_values">Attribute 5 Values </label></td>
+    	<td class="value">
+        	<select multiple="multiple" size="10" class="select multiselect" name="attr5_values[]" id="attr5_values">
+        		<option>--- Please Select A Value Above ---</option>
+			</select>
+			<p id="note_attr5_values" class="note"><span>Selected attribute values will display in frontend</span></p>
+		</td>
+    </tr>
+
+</table>
+<script src="http://code.jquery.com/jquery-latest.min.js" type="text/javascript"></script>
+<script type="text/javascript">
+	var jQuery = jQuery.noConflict();
+	// jQuery(function(){
+		function myFunction(a) {
+			var data1 = "&attribute="+a.value+'&name='+a.name;
+			var url1 = '<?php echo Mage::getBaseUrl(); ?>mycategory/index/getattributevalues';
+			try {
+				jQuery.ajax({
+					url: url1,
+					type : 'post',
+					data: data1,
+					success: function(response){
+						if (response) {
+							jQuery('#'+a.name+'_values').replaceWith(response);
+						}
+					}
+				});
+			} catch(e){ }
+		}
+		// jQuery('#attribute').change(function() {
+		// 	alert('Hi');
+			// var data1 = "&attribute="+this.value+'&name='jQuery(this).attr('name');
+			// var url1 = '<?php echo Mage::getBaseUrl(); ?>styles/index/availstittypes';
+			// try {
+			// 	jQuery.ajax({
+			// 		url: url1,
+			// 		type : 'post',
+			// 		data: data1,
+			// 		success: function(response){
+			// 			if (response) {
+			// 				var string = response;
+			// 			} else{
+			// 				var string = '<select multiple="multiple" size="10" class="required-entry required-entry select multiselect" name="stitching_service[]" id="stitching_service"><option>--- Select Multiple Options ---</option></select>';
+			// 			}
+			// 			jQuery('#stitching_service').replaceWith(string);
+			// 		}
+			// 	});
+			// } catch(e){ }
+		// });
+	// });
+</script>
